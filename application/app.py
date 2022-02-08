@@ -18,7 +18,7 @@ def home():
 
 @app.route('/evaluation/')
 def evaluate():
-    return render_template('evaluate.html', result="aa")
+    return render_template('evaluate.html')
 
 if __name__ == '__main__':
     app.run()
