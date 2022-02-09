@@ -30,9 +30,11 @@
       </div>
     </form>
     
+    {% if filename %}
     <div>
       <img src="{{ url_for('display_image', filename=filename) }}">
     </div>
+    {% endif %}
     
 </div>
 {% endblock %}
