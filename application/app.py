@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from config import config
 from forms import ImageForm
 import os
@@ -17,15 +17,19 @@ def home():
     return render_template('base.html', message="Hello Retinex Team")
 
 
-@app.route('/evaluation/', methods=['GET','POST'])
-def evaluate():
+@app.route('/upload_image/', methods=['GET','POST'])
+def upload_image():
     form = ImageForm()
     if form.validate_on_submit():
-        f = form.image.data
-        # f.save(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images', f.filename))
-        return render_template('evaluate.html', form=form)
+        image = form.image.data
+        image.save(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/uploads', image.filename))
+        return render_template('upload_image.html', form=form, filename=image.filename)
+    return render_template('upload_image.html', form=form)
 
-    return render_template('evaluate.html', form=form)
+@app.route('/display/<filename>')
+def display_image(filename):
+    return redirect(url_for('static', filename='uploads/' + filename), code=301)
+
 
 if __name__ == '__main__':
     app.run()
