@@ -1,14 +1,18 @@
+import os
+
 class DefaultConfig:
     def __init__(self, env='development', debug=False, testing=False):
         self.env = env
         self.debug = debug
         self.testing = testing
+        self.secret_key = os.urandom(32)
 
     def as_flask_config_dict(self):
         return {
             'ENV': self.env,
             'DEBUG': self.debug,
             'TESTING': self.testing,
+            'SECRET_KEY': self.secret_key
         }
 
 class DevConfig(DefaultConfig):
