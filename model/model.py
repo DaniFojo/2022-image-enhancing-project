@@ -58,14 +58,15 @@ class RelightNet(nn.Module):
 	Encoder-decoder with skip connections + denoising operation.
 	"""
 
-	def __init__(self):
+	def __init__(self, in_channels, out_channels=64, kernel_size=3):
 		super().__init__()
 
 		# Encoder
-		self.conv1 = nn.Conv2d(...)  # + relu
-		self.conv2 = nn.Conv2d(...)  # + relu
-		self.conv3 = nn.Conv2d(...)  # + relu
-		self.conv4 = nn.Conv2d(...)  # + relu
+		self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same') # NO Relu.
+
+		self.conv2 = nn.Conv2d(...)  # stride 2, + relu
+		self.conv3 = nn.Conv2d(...)  # stride 2, + relu
+		self.conv4 = nn.Conv2d(...)  # stride 2, + relu
 
 
 		# Decoder
@@ -95,8 +96,9 @@ class RelightNet(nn.Module):
 
 
 
-	def forward(self, x):
-		...
+	def forward(self, input_L, input_R):
+
+		input_im = concat([input_R, input_L])
 
 
 
