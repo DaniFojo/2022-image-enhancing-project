@@ -13,7 +13,7 @@ class DecomNet(nn.Module):
 	def __init__(self, out_channels=64, kernel_size=3):
 		super().__init__()
 		# Convolutional with no activation function:
-		# Notar kernel size * 3.
+		# Notar: en el código original usa kernel size * 3.
 		padding = (kernel_size - 1) / 2
 		self.conv1 = nn.Conv2d(in_channels=3, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding=padding)  
 
@@ -28,6 +28,12 @@ class DecomNet(nn.Module):
 		self.conv7 = nn.Conv2d(in_channels=out_channels, out_channels=4, kernel_size=kernel_size, stride=1, padding=padding)
 
 	def forward(self, x):
+
+		# Nota: En el código original altera la imagen agregándole un nuevo channel
+		# con el máx de la dimensión channels (colores)
+		# input_max = tf.reduce_max(input_im, axis=3, keepdims=True)
+        # input_im = concat([input_max, input_im])
+
 		x = self.conv1(x)
 		x = F.relu(self.conv2(x))
 		x = F.relu(self.conv3(x))
