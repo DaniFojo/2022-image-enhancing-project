@@ -1,3 +1,4 @@
+import torch
 import time
 from torch.utils.data import DataLoader
 import model.model as m
