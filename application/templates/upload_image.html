@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script>
+  // Script to validate the file extension of the file.
+  function validateFileExtension(el, extensions) {
+      var regex = /(?<=\.)[0-9a-z]+$/i;
+      var extension = el.value.toLowerCase().match(regex)[0];
+      if (!(extensions.includes(extension))) {
+          el.value = '';
+          alert('Please select a valid file.');
+      }
+  }
+  </script>
+  {% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-white px-4 py-2">
+    <div class="row">
+        <div class="col text-left">
+          <h3>Please, upload the image file</h3>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="text-center">
+      {{ form.csrf_token }}
+      <div>
+        {{ form.image(onchange='validateFileExtension(this, ["jpg","png"])') }}
+        {{ form.submit }}
+      </div>
+    </form>
+    
+    {% if filename %}
+    <div>
+      <img src="{{ url_for('display_image', filename=filename) }}">
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}
