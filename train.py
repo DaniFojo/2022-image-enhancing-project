@@ -40,9 +40,9 @@ def train_relight(train_loader):
 		
 		r_low, i_low 	= DecomNet(img_low)
 		r_norm, i_norm 	= DecomNet(img_normal)
-		img_enhanced 	= RelightNet(concat(r_low,i_low))
+		i_enhanced 	= RelightNet(concat(r_low,i_low))
 
-		loss = loss_relightNet(img_normal, r_low, img_enhanced) # i_delta = illumination delta - output of RelightNet (enhanced illumination for the low-light image)
+		loss = loss_relightNet(img_normal, r_low, i_enhanced) # i_delta = illumination delta - output of RelightNet (enhanced illumination for the low-light image)
 		loss_relightNet.backward()
 		optimizer_relight.step()
 		losses.append(loss.item())
