@@ -16,7 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train_decom(train_loader):
 	losses = []
 
-	optimizer_decom = optim.Adam(...)
+	optimizer_decom = optim.Adam(...)  # fuera del for de epoch. Aplicar param groups, 1 solo optimizer.
 	DecomNet.train()
 	for img_low, img_normal in train_loader:
 		optimizer_decom.zero_grad()
@@ -24,7 +24,7 @@ def train_decom(train_loader):
 		r_low, i_low 	= DecomNet(img_low)
 		r_norm, i_norm 	= DecomNet(img_normal)
 		loss = loss_decomNet(img_low, img_normal, r_low, i_low, r_norm, i_norm)
-		loss_decomNet.backward()
+		loss.backward()
 		optimizer_decom.step()
 		losses.append(loss.item())
 
@@ -39,11 +39,11 @@ def train_relight(train_loader):
 		optimizer_relight.zero_grad()
 		
 		r_low, i_low 	= DecomNet(img_low)
-		r_norm, i_norm 	= DecomNet(img_normal)
+		r_norm, i_norm 	= DecomNet(img_normal) 	# no necesario para evaluar la loss?
 		i_enhanced 	= RelightNet(concat(r_low,i_low))
 
 		loss = loss_relightNet(img_normal, r_low, i_enhanced) # i_delta = illumination delta - output of RelightNet (enhanced illumination for the low-light image)
-		loss_relightNet.backward()
+		loss.backward()
 		optimizer_relight.step()
 		losses.append(loss.item())
 
