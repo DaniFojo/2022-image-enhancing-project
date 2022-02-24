@@ -19,8 +19,8 @@ from torchvision import transforms
 # load datasets
 
 # Constants
-IMAGES_PAHT_LOW = 'data/LOL/our485/low'
-IMAGES_PAHT_HIGH = 'data/LOL/our485/high'
+IMAGES_PAHT_LOW = 'data/bothDatasets/Low'
+IMAGES_PAHT_HIGH = 'data/bothDatasets/High'
 BATCH_SIZE = 64
 TEST_SET_SIZE = 0.9
 VAL_SET_SIZE = 0.05
