@@ -6,13 +6,15 @@ from torchvision import transforms
 
 class DataLoader():
 
-    def GetDataLoaders(path_low='data/bothDatasets/Low', path_high= 'data/bothDatasets/High', batch_size=64, train_size=0.9, val_size=0.05):
+    @classmethod
+    def GetDataLoaders(sel, path_low='data/bothDatasets/Low', path_high='data/bothDatasets/High', batch_size=64, train_size=0.9, val_size=0.05):
         transform = transforms.Compose([
+            transforms.Resize([400, 400]),
             transforms.ToTensor()
         ])
-
+        
         my_dataset = myDataset(path_low, path_high, transform)
-        print(my_dataset.len())
+        print(len(my_dataset))
 
         # Getting size of sets 
         dataset_len = len(my_dataset)
@@ -31,7 +33,9 @@ class DataLoader():
 
         return train_dataloader, val_dataloader, test_dataloader
         
-# # Display image and label.
+# # # Display image and label.
+# train_dataloader, _, _ = DataLoader().GetDataLoaders()
+# print("Hello")
 # train_LOW, train_HIGH = next(iter(train_dataloader))
 # print(f"train_LOW shape: {train_LOW.size()}")
 # print(f"train_HIGH shape: {train_HIGH.size()}")
