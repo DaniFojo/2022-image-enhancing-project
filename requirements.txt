@@ -5,4 +5,4 @@ Flask-WTF==1.0.0
 torch
 tensorboard
 numpy
-
+torchvision
