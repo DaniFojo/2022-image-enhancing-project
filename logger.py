@@ -48,6 +48,8 @@ class WandbLogger():
                    'epoch': epoch
                    })
 
+        # logImage
+
     def log_embeddings(self, model, train_loader, device):
         out = model.encoder.linear.out_features
         columns = np.arange(out).astype(str).tolist()

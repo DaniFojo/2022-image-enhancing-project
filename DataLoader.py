@@ -7,14 +7,13 @@ from torchvision import transforms
 class DataLoader():
 
     @classmethod
-    def GetDataLoaders(sel, path_low='data/bothDatasets/Low', path_high='data/bothDatasets/High', batch_size=64, train_size=0.9, val_size=0.05):
+    def GetDataLoaders(self, path_low='data/bothDatasets/Low', path_high='data/bothDatasets/High', batch_size=16, train_size=0.9, val_size=0.05):
         transform = transforms.Compose([
-            transforms.Resize([400, 400]),
+            transforms.Resize([20, 20]),
             transforms.ToTensor()
         ])
         
         my_dataset = myDataset(path_low, path_high, transform)
-        print(len(my_dataset))
 
         # Getting size of sets 
         dataset_len = len(my_dataset)
