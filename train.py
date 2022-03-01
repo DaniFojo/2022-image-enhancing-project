@@ -93,7 +93,6 @@ def train_relight(model_decom, model_relight, train_loader, optimizer):
 		print(f"Step: {step}, loss: {loss.item()}")
 		step += 1
 
-
 	return np.mean(losses)
 
 
@@ -112,6 +111,7 @@ def eval_decom(model_decom, val_loader):
 
 			loss = retinex_model.loss_decomNet(img_low, img_normal, r_low, i_low, r_norm, i_norm)
 			losses.append(loss.item())
+			
 	return np.mean(losses)
 
 
@@ -140,8 +140,8 @@ if __name__ == "__main__":
 	# * Aqui o en el main.py. Para entrenar el modelo.
 
 	# Hyperparameters
-	DECOM_NET_LR 	= 0.01
-	RELIGHT_NET_LR 	= 0.01
+	DECOM_NET_LR 	= 0.001
+	RELIGHT_NET_LR 	= 0.001
 
 	#################
 

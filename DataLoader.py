@@ -6,32 +6,33 @@ from torchvision import transforms
 
 class DataLoader():
 
-    @classmethod
-    def GetDataLoaders(self, path_low='data/bothDatasets/Low', path_high='data/bothDatasets/High', batch_size=16, train_size=0.9, val_size=0.05):
-        transform = transforms.Compose([
-            transforms.Resize([20, 20]),
-            transforms.ToTensor()
-        ])
-        
-        my_dataset = myDataset(path_low, path_high, transform)
+	@classmethod
+	def GetDataLoaders(self, path_low='data/bothDatasets/Low', path_high='data/bothDatasets/High', batch_size=16, train_size=0.9, val_size=0.05):
+		print("GetDataLoaders: warning: resizing images to 20x20...")
+		transform = transforms.Compose([
+			transforms.Resize([20, 20]),
+			transforms.ToTensor()
+		])
+		
+		my_dataset = myDataset(path_low, path_high, transform)
 
-        # Getting size of sets 
-        dataset_len = len(my_dataset)
-        num_train = int(np.floor(dataset_len * train_size))
-        num_val = int(np.floor(dataset_len * val_size))
-        num_test = dataset_len - num_train - num_val
-        print(f'Num of train images: {num_train}, num of val images: {num_val}, num of test images: {num_test}')
+		# Getting size of sets 
+		dataset_len = len(my_dataset)
+		num_train = int(np.floor(dataset_len * train_size))
+		num_val = int(np.floor(dataset_len * val_size))
+		num_test = dataset_len - num_train - num_val
+		print(f'Num of train images: {num_train}, num of val images: {num_val}, num of test images: {num_test}')
 
-        # Getting sets
-        train_set, val_set, test_set = data.random_split(my_dataset, [num_train, num_val, num_test])
+		# Getting sets
+		train_set, val_set, test_set = data.random_split(my_dataset, [num_train, num_val, num_test])
 
-        # Getting DataLoaders
-        train_dataloader = data.DataLoader(train_set, batch_size = batch_size, shuffle=True)
-        val_dataloader = data.DataLoader(val_set, batch_size = batch_size, shuffle=True)
-        test_dataloader = data.DataLoader(test_set, batch_size = batch_size, shuffle=True)
+		# Getting DataLoaders
+		train_dataloader = data.DataLoader(train_set, batch_size = batch_size, shuffle=True)
+		val_dataloader = data.DataLoader(val_set, batch_size = batch_size, shuffle=True)
+		test_dataloader = data.DataLoader(test_set, batch_size = batch_size, shuffle=True)
 
-        return train_dataloader, val_dataloader, test_dataloader
-        
+		return train_dataloader, val_dataloader, test_dataloader
+		
 # # # Display image and label.
 # train_dataloader, _, _ = DataLoader().GetDataLoaders()
 # print("Hello")
