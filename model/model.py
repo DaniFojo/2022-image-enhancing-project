@@ -36,8 +36,8 @@ class DecomNet(nn.Module):
 		x = self.conv6(x)
 
 		# Reflectance and illuminance
-		R = F.sigmoid(x[:,0:3,:,:]) # n x c x h x w
-		I = F.sigmoid(x[:,3:4,:,:]) # n x c x h x w
+		R = F.sigmoid(x[:,0:3,:,:])
+		I = F.sigmoid(x[:,3:4,:,:])
 		return R,I
 
 class RelightNet(nn.Module):
@@ -59,34 +59,24 @@ class RelightNet(nn.Module):
 		self.deconv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same')
 		self.deconv3 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same')
 
-		# self.deconv1 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same')
-		# self.deconv2 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same')
-		# self.deconv3 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1, padding='same')
-
 		# Last Convolutions
 		self.convO = nn.Conv2d(in_channels=3*out_channels, out_channels=out_channels, kernel_size=1, stride=1, padding='same')
 		self.convF = nn.Conv2d(in_channels=out_channels, out_channels=1, kernel_size=kernel_size, stride=1, padding='same')
-
 
 	def forward(self, x):
 		x0 = self.conv0(x)
 		x1 = F.relu(self.conv1(x0))
 		x2 = F.relu(self.conv2(x1))
 		x3 = F.relu(self.conv3(x2))
-
 		x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='nearest')
 		x4 = F.relu(self.deconv1(x4)) + x2
-
 		x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='nearest')
 		x5 = F.relu(self.deconv2(x5)) + x1
-
 		x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='nearest')
 		x6 = F.relu(self.deconv3(x6)) + x0
-
 		x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
 		x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
 		x = torch.cat((x6, x7, x8), dim=1)
-
 		x = self.convO(x)
 		x = self.convF(x)
 		return x
@@ -114,9 +104,9 @@ class RelightNetConvTrans(nn.Module):
 		x1 = F.relu(self.conv1(x0))
 		x2 = F.relu(self.conv2(x1))
 		x3 = F.relu(self.conv3(x2))		
-		x4 = F.relu(self.deconv1(x4)) + x2
-		x5 = F.relu(self.deconv2(x5)) + x1
-		x6 = F.relu(self.deconv3(x6)) + x0		
+		x4 = F.relu(self.deconv1(x3)) + x2
+		x5 = F.relu(self.deconv2(x4)) + x1
+		x6 = F.relu(self.deconv3(x5)) + x0		
 		x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
 		x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
 		x = torch.cat((x6, x7, x8), dim=1)		
@@ -124,30 +114,12 @@ class RelightNetConvTrans(nn.Module):
 		x = self.convF(x)
 		return x
 
-class ImageEnhance(nn.Module):
-
-	def __init__(self, out_channels=64, kernel_size=3):
-		super().__init__()
-		self.decom = DecomNet(out_channels, kernel_size)
-		self.relight = RelightNet(out_channels, kernel_size)
-
-	def forward(self, x):
-		R, I = self.decom(x)
-		x = self.relight(torch.concat((R,I), dim=1))
-		return x
-
-
-
-
-
-
 def smooth(r, i):
 	r = tv.transforms.functional.rgb_to_grayscale(r)
 	gradient_x = gradient(i, "x") * torch.exp(-10 * ave_gradient(r, "x"))
 	gradient_y = gradient(i, "y") * torch.exp(-10 * ave_gradient(r, "y"))
 	gradient_avg = torch.mean(gradient_x + gradient_y)
 	return gradient_avg
-
 
 def gradient(input_tensor, direction):
 	smooth_kernel_x = torch.reshape(torch.tensor([[0, 0], [-1, 1]], dtype=torch.float32), (1, 1, 2, 2))
@@ -159,12 +131,10 @@ def gradient(input_tensor, direction):
 	grad = torch.abs(F.conv2d(input=input_tensor, weight=kernel, stride=1, padding='same'))
 	return 	grad
 
-
 def ave_gradient(input_tensor, direction):
 	avg_pool = nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
 	avg_grad = avg_pool(gradient(input_tensor, direction))
 	return avg_grad
-
 
 def loss_decomNet(input_low, input_high, r_low, i_low, r_high, i_high):
 	i_low3 = torch.concat((i_low, i_low, i_low),dim=1)
@@ -179,38 +149,9 @@ def loss_decomNet(input_low, input_high, r_low, i_low, r_high, i_high):
 	loss_decom = loss_recon_low + loss_recon_high + 0.001 * loss_recon_mutal_low + 0.001 * loss_recon_mutal_high + 0.01 * loss_invariable_reflectance + 0.1 * loss_illumination_smoothness_low + 0.1 * loss_illumination_smoothness_high
 	return loss_decom
 
-
 def loss_relightNet(input_high, r_low, i_delta):
 	i_delta3 = torch.concat((i_delta, i_delta, i_delta), dim=1)
 	loss_recon = torch.mean(torch.abs(input_high - r_low * i_delta3))
 	loss_illumination_smoothness = smooth(r_low, i_delta)
 	loss_relight = loss_recon  + 3 * loss_illumination_smoothness
 	return loss_relight
-
-
-
-
-
-
-
-
-
-# class ImageEnhance():
-
-# 	def __init__(self):
-#  		[R_low, I_low] = DecomNet(self.input_low)
-# 		[R_high, I_high] = DecomNet(self.input_high)
-		
-# 		I_delta = RelightNet(I_low, R_low)
-
-# 		I_low_3 = concat([I_low, I_low, I_low])
-# 		I_high_3 = concat([I_high, I_high, I_high])
-# 		I_delta_3 = concat([I_delta, I_delta, I_delta])
-# 		# ...
-
-# 		# Loss
-# 		# ...
-
-# 		# Optimizer
-# 		# ...
-
