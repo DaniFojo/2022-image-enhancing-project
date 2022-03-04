@@ -1,14 +1,13 @@
-from .configs import DefaultConfig, DevConfig, ProdConfig
+from .configs import DevConfig
 
 
-env = 'DEV'
+ENV = 'DEV'
 
-if env == 'DEV':
+if ENV == 'DEV':
     config = DevConfig()
 
-elif env == 'PROD':
-    config = ProdConfig()
+# elif ENV == 'PROD':
+#     config = ProdConfig()
 
-else:
-    config = DefaultConfig()
-
+# else:
+#     config = DefaultConfig()

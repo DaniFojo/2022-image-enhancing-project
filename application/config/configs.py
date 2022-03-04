@@ -1,5 +1,6 @@
 import os
 
+
 class DefaultConfig:
     def __init__(self, env='development', debug=False, testing=False):
         self.env = env
@@ -15,18 +16,19 @@ class DefaultConfig:
             'SECRET_KEY': self.secret_key
         }
 
+
 class DevConfig(DefaultConfig):
     def __init__(self):
         super().__init__(
-            env = 'development',
-            debug = True,
-            testing = True
+            env='development',
+            debug=True,
+            testing=True
         )
+
 
 class ProdConfig(DefaultConfig):
     def __init__(self):
         super().__init__(
-            env = 'production',
-            debug = False,
-            testing = False
-        )
+            env='production',
+            debug=False,
+            testing=False)
