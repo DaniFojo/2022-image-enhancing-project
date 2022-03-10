@@ -7,11 +7,12 @@ from dataset import MyDataset
 class MyDataLoader():
 
 	def get_data_loaders(self, path_low='data/low', path_high='data/high',
-						 batch_size=4, train_size=0.9, val_size=0.05):
-		print("get_data_loaders: warning: resizing images to 100x100...")
+						 batch_size=16, train_size=0.9, val_size=0.05):
+		# print("get_data_loaders: warning: resizing images to 100x100...")
 		print("get_data_loaders: path low: ", path_low, " - path high: ", path_high)
 		transform = transforms.Compose(
-			[transforms.Resize([100, 100]), transforms.ToTensor()])
+			[transforms.Resize([300, 300]), transforms.ToTensor()])
+		# transform = transforms.ToTensor()
 		my_dataset = MyDataset(path_low, path_high, transform)
 
 		# Getting size of sets

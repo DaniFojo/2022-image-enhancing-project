@@ -50,6 +50,9 @@ def train(model_decom, model_rel, train_loader, opt):
 		losses_decom.append(loss_decom.item())
 
 		i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
+		grid_ienhanced = make_grid(i_enhanced)
+		wdb_ienhanced = wandb.Image(grid_ienhanced, "ienhanced")
+
 		loss_relight = retinex_model.loss_relight_net(img_high, r_low, i_enhanced)
 		losses_relight.append(loss_relight.item())
 
@@ -60,9 +63,9 @@ def train(model_decom, model_rel, train_loader, opt):
 
 		wandb.log({"loss_total": loss_total, "loss_decom": loss_decom, "loss_relight": loss_relight,
 				   "image_low": wdb_low, "image_high": wdb_high, "ilow": wdb_ilow,
-				   "ihigh": wdb_ihigh, "rlow": wdb_rlow, "rhigh": wdb_rhigh})
+				   "ihigh": wdb_ihigh, "rlow": wdb_rlow, "rhigh": wdb_rhigh, "ienhanced": wdb_ienhanced})
 
-	return np.mean(losses_decom), np.mean(loss_relight)
+	return np.mean(losses_decom), np.mean(losses_relight)
 
 
 def train_decom(model_decom, train_loader, opt):

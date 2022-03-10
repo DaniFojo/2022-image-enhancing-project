@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision as tv
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DecomNet(nn.Module):
     """
@@ -43,8 +44,8 @@ class DecomNet(nn.Module):
         x = self.conv6(x)
 
         # Reflectance and illuminance
-        reflectance = F.sigmoid(x[:, 0:3, :, :])
-        illumination = F.sigmoid(x[:, 3:4, :, :])
+        reflectance = torch.sigmoid(x[:, 0:3, :, :])
+        illumination = torch.sigmoid(x[:, 3:4, :, :])
         return reflectance, illumination
 
 
@@ -154,8 +155,8 @@ def smooth(r, i):
 
 def gradient(input_tensor, direction):
     smooth_kernel_x = torch.reshape(torch.tensor([[0, 0], [-1, 1]],
-                                    dtype=torch.float32), (1, 1, 2, 2))
-    smooth_kernel_y = torch.transpose(smooth_kernel_x, dim0=2, dim1=3)
+                                    dtype=torch.float32), (1, 1, 2, 2)).to(device)
+    smooth_kernel_y = torch.transpose(smooth_kernel_x, dim0=2, dim1=3).to(device)
     if direction == "x":
         kernel = smooth_kernel_x
     elif direction == "y":
