@@ -9,7 +9,7 @@ from logger import WandbLogger
 
 
 # Constants
-N_EPOCHS = 2
+N_EPOCHS = 5
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = WandbLogger()
@@ -44,7 +44,9 @@ def train(model_decom, model_rel, train_loader, opt):
 
 		if i%5==0:
 			logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed)
-			logger.log_training(loss_total, loss_decom, loss_relight)
+			logger.log_training(loss, loss_decom, loss_relight)
+		
+		print("batch: ", i, " loss: ", loss.item())
 
 		loss.backward()
 		opt.step()
@@ -129,13 +131,38 @@ def eval_relight(model_decom, model_rel, val_loader):
 	return np.mean(losses)
 
 
+
+def save_model(model_decom, model_relight, savedir):
+	# Save the artifacts of the training
+    print(f"Saving checkpoint to {savedir}...")
+    # We can save everything we will need later in the checkpoint.
+    checkpoint = {
+        "model_decom_state_dict": model_decom.cpu().state_dict(),
+        "model_relight_state_dict": model_relight.cpu().state_dict(),
+    }
+    torch.save(checkpoint, savedir)
+
+
+def load_model(checkpoint_path):
+    checkpoint = torch.load(checkpoint_path)
+
+    model_decomposition = retinex_model.DecomNet().to(device)
+    model_relight = retinex_model.RelightNet().to(device)
+
+    model_decomposition.load_state_dict(checkpoint["model_decom_state_dict"])
+    model_relight.load_state_dict(checkpoint["model_relight_state_dict"])
+
+    return model_decomposition, model_relight
+
+
+
 if __name__ == "__main__":
 
 	# Hyperparameters
 	DECOM_NET_LR = 0.001
 	RELIGHT_NET_LR = 0.001
 
-	# wandb.login(relogin=True)
+	wandb.login(relogin=True)
 	wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
 
 	# Get DataLoaders

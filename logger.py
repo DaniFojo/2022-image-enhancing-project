@@ -12,7 +12,7 @@ class WandbLogger():
         # wandb.run.name = f'{task}-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
 
     def make_grid_wandb(self, img, tag, idx=5):
-        grid = make_grid(img)
+        grid = make_grid(img[:idx])
         wdb_image = wandb.Image(grid, tag)
         return wdb_image
 
