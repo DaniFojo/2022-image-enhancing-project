@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class DecomNet(nn.Module):
     """
     Convolutional NN
-    Takes in paired low/normal-light images and learns the decomposition for both.
+    Takes in paired low/high-light images and learns the decomposition for both.
     Constraint: images share the same reflectance.
     """
 

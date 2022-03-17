@@ -16,23 +16,28 @@ class WandbLogger():
         wdb_image = wandb.Image(grid, tag)
         return wdb_image
 
-    def log_images_grid(self, img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed):
-        wdb_low = self.make_grid_wandb(img_low, "input_image_low")
-        wdb_high = self.make_grid_wandb(img_high, "input_image_high")
-        wdb_ilow = self.make_grid_wandb(i_low, "ilow")
-        wdb_ihigh = self.make_grid_wandb(i_high, "ihigh")
-        wdb_rlow = self.make_grid_wandb(r_low, "rlow")
-        wdb_rhigh = self.make_grid_wandb(r_high, "rhigh")
-        wdb_ienhanced = self.make_grid_wandb(i_enhanced, "ienhanced")
-        wdb_reconstructed = self.make_grid_wandb(reconstructed, "reconstructed")
-        wandb.log({"image_low": wdb_low, 
-                   "image_high": wdb_high, 
-                   "ilow": wdb_ilow,
-                   "ihigh": wdb_ihigh, 
-                   "rlow": wdb_rlow, 
-                   "rhigh": wdb_rhigh, 
-                   "ienhanced": wdb_ienhanced,
-                   "reconstructed": wdb_reconstructed})
+    def log_images_grid(self, img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='train'):
+        if mode == 'train':
+            suf = 'tr'
+        elif mode == 'validation':
+            suf = 'vl'
+        wdb_low = self.make_grid_wandb(img_low, f"{suf}_input_image_low")
+        wdb_high = self.make_grid_wandb(img_high, f"{suf}_input_image_high")
+        wdb_ilow = self.make_grid_wandb(i_low, f"{suf}_ilow")
+        wdb_ihigh = self.make_grid_wandb(i_high, f"{suf}_ihigh")
+        wdb_rlow = self.make_grid_wandb(r_low, f"{suf}_rlow")
+        wdb_rhigh = self.make_grid_wandb(r_high, f"{suf}_rhigh")
+        wdb_ienhanced = self.make_grid_wandb(i_enhanced, f"{suf}_ienhanced")
+        wdb_reconstructed = self.make_grid_wandb(reconstructed, f"{suf}_reconstructed")
+        wandb.log({f"{suf}_image_low": wdb_low, 
+                   f"{suf}_image_high": wdb_high, 
+                   f"{suf}_ilow": wdb_ilow,
+                   f"{suf}_ihigh": wdb_ihigh, 
+                   f"{suf}_rlow": wdb_rlow, 
+                   f"{suf}_rhigh": wdb_rhigh, 
+                   f"{suf}_ienhanced": wdb_ienhanced,
+                   f"{suf}_reconstructed": wdb_reconstructed})
+
 
     def log_images_grid_asPaper(self, img_low, img_high, i_low, i_norm, r_low, r_high, i_enhanced):
         aux_1 = torch.full((3,300, 300), 1)

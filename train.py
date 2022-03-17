@@ -3,7 +3,7 @@ import torch.optim as optim
 import numpy as np
 from torchvision.utils import make_grid
 import wandb
-import model.model as retinex_model
+from model.model import DecomNet, RelightNet, loss_decom_net, loss_relight_net
 from dataloader import MyDataLoader
 from logger import WandbLogger
 
@@ -14,126 +14,140 @@ N_EPOCHS = 5
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = WandbLogger()
 
+
+def forward_losses(model_decom, model_rel, img_low, img_high):
+    img_low, img_high = img_low.to(device), img_high.to(device)
+    r_low, i_low = model_decom(img_low)
+    r_high, i_high = model_decom(img_high)
+    r_low, i_low = r_low.to(device), i_low.to(device)
+    r_high, i_high = r_high.to(device), i_high.to(device)
+    loss_decom = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
+    i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
+    loss_relight = loss_relight_net(img_high, r_low, i_enhanced)
+    loss = loss_decom + loss_relight
+    i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+    reconstructed = r_low * i_enhanced_3
+    return i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss
+
+
 def train(model_decom, model_rel, train_loader, opt):
-	losses_decom = []
-	losses_relight = []
-	loss_total = []
+    losses_decom = []
+    losses_relight = []
+    loss_total = []
+    model_decom.train()
+    model_relight.train()
+    for j, (img_low, img_high) in enumerate(train_loader):
+        optimizer.zero_grad()
+        i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
+        losses_decom.append(loss_decom)
+        losses_relight.append(loss_relight)
+        loss_total.append(loss)
+        if j % 5 == 0:
+            logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='train')
+            logger.log_training(loss, loss_decom, loss_relight)
+        loss.backward()
+        opt.step()
+    return np.mean(loss_decom), np.mean(loss_relight), np.mean(loss_total)
 
-	print("starting...")
-	model_decom.train()
-	model_relight.train()
-	for i, (img_low, img_high) in enumerate(train_loader):
 
-		optimizer.zero_grad()
-		img_low, img_high = img_low.to(device), img_high.to(device)
-		r_low, i_low = model_decom(img_low)
-		r_high, i_high = model_decom(img_high)
-		r_low, i_low = r_low.to(device), i_low.to(device)
-		r_high, i_high = r_high.to(device), i_high.to(device)
-		loss_decom = retinex_model.loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
-		losses_decom.append(loss_decom.item())
-		i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
-		loss_relight = retinex_model.loss_relight_net(img_high, r_low, i_enhanced)
-		losses_relight.append(loss_relight.item())
-		loss = loss_decom + loss_relight
-		loss_total.append(loss.item())
-
-		# TODO: Denoising
-		i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
-		reconstructed = r_low * i_enhanced_3
-
-		if i%5==0:
-			logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed)
-			logger.log_training(loss, loss_decom, loss_relight)
-		
-		print("batch: ", i, " loss: ", loss.item())
-
-		loss.backward()
-		opt.step()
-
-	return np.mean(losses_decom), np.mean(losses_relight)
+def eval(model_decom, model_rel, val_loader):    
+    losses_decom = []
+    losses_relight = []
+    loss_total = []
+    with torch.no_grad():
+        model_decom.eval()
+        model_relight.eval()
+        for j, (img_low, img_high) in enumerate(val_loader):
+            i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
+            losses_decom.append(loss_decom)
+            losses_relight.append(loss_relight)
+            loss_total.append(loss)
+            if j % 5 == 0:
+                logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='validation')
+                logger.log_eval(loss, loss_decom, loss_relight)
+    return np.mean(loss_decom), np.mean(loss_relight), np.mean(loss_total)
 
 
 def train_decom(model_decom, train_loader, opt):
-	losses = []
-	step = 0
-	model_decom.train()
-	print("starting...")
-	for img_low, img_high in train_loader:
-		opt.zero_grad()
-		img_low, img_high = img_low.to(device), img_high.to(device)
-		r_low, i_low = model_decom(img_low)
-		r_high, i_high = model_decom(img_high)
-		loss = retinex_model.loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
-		loss.backward()
-		opt.step()
-		losses.append(loss.item())
-		print(f"Step: {step}, loss: {loss.item()}")
-		step += 1
+    losses = []
+    step = 0
+    model_decom.train()
+    print("starting...")
+    for img_low, img_high in train_loader:
+        opt.zero_grad()
+        img_low, img_high = img_low.to(device), img_high.to(device)
+        r_low, i_low = model_decom(img_low)
+        r_high, i_high = model_decom(img_high)
+        loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
+        loss.backward()
+        opt.step()
+        losses.append(loss.item())
+        print(f"Step: {step}, loss: {loss.item()}")
+        step += 1
 
-	return np.mean(losses)
+    return np.mean(losses)
 
 
 def train_relight(model_decom, model_rel, train_loader, opt):
-	losses = []
-	step = 0
-	model_decom.eval()
-	model_rel.train()
-	for img_low, img_high in train_loader:
-		opt.zero_grad()
-		img_low, img_high = img_low.to(device), img_high.to(device)
-		r_low, i_low = model_decom(img_low)
-		# esta parte de la red ya estaría entrenada.
-		# Solo habría que hacer el forward para
-		# obtener reflectance e illumination.
-		i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
+    losses = []
+    step = 0
+    model_decom.eval()
+    model_rel.train()
+    for img_low, img_high in train_loader:
+        opt.zero_grad()
+        img_low, img_high = img_low.to(device), img_high.to(device)
+        r_low, i_low = model_decom(img_low)
+        # esta parte de la red ya estaría entrenada.
+        # Solo habría que hacer el forward para
+        # obtener reflectance e illumination.
+        i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
 
-		loss = retinex_model.loss_relight_net(img_high, r_low, i_enhanced)
-		# i_delta = illumination delta - output of RelightNet
-		# (enhanced illumination for the low-light image)
-		loss.backward()
-		opt.step()
-		losses.append(loss.item())
-		print(f"Step: {step}, loss: {loss.item()}")
-		step += 1
+        loss = loss_relight_net(img_high, r_low, i_enhanced)
+        # i_delta = illumination delta - output of RelightNet
+        # (enhanced illumination for the low-light image)
+        loss.backward()
+        opt.step()
+        losses.append(loss.item())
+        print(f"Step: {step}, loss: {loss.item()}")
+        step += 1
 
-	return np.mean(losses)
+    return np.mean(losses)
 
 
 def eval_decom(model_decom, val_loader):
-	losses = []
+    losses = []
 
-	with torch.no_grad():
-		model_decom.eval()
-		for img_low, img_high in val_loader:
-			img_low, img_high = img_low.to(device), img_high.to(device)
-			r_low, i_low = model_decom(img_low)
-			r_high, i_high = model_decom(img_high)
-			loss = retinex_model.loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
-			losses.append(loss.item())
-	return np.mean(losses)
+    with torch.no_grad():
+        model_decom.eval()
+        for img_low, img_high in val_loader:
+            img_low, img_high = img_low.to(device), img_high.to(device)
+            r_low, i_low = model_decom(img_low)
+            r_high, i_high = model_decom(img_high)
+            loss = loss_decom_net(img_low, img_high, r_low, i_low, 
+                                  r_high, i_high)
+            losses.append(loss.item())
+    return np.mean(losses)
 
 
 def eval_relight(model_decom, model_rel, val_loader):
-	losses = []
+    losses = []
 
-	with torch.no_grad():
-		model_decom.eval()
-		model_rel.eval()
-		for img_low, img_high in val_loader:
-			img_low, img_high = img_low.to(device), img_high.to(device)
-			r_low, i_low = model_decom(img_low)
-			i_enhanced = model_rel(torch.concat(r_low, i_low))
-			loss = retinex_model.loss_relight_net(img_high, r_low, i_enhanced)
-			# i_delta = illumination delta - output of RelightNet
-			# (enhanced illumination for the low-light image)
-			losses.append(loss.item())
-	return np.mean(losses)
-
+    with torch.no_grad():
+        model_decom.eval()
+        model_rel.eval()
+        for img_low, img_high in val_loader:
+            img_low, img_high = img_low.to(device), img_high.to(device)
+            r_low, i_low = model_decom(img_low)
+            i_enhanced = model_rel(torch.concat(r_low, i_low))
+            loss = loss_relight_net(img_high, r_low, i_enhanced)
+            # i_delta = illumination delta - output of RelightNet
+            # (enhanced illumination for the low-light image)
+            losses.append(loss.item())
+    return np.mean(losses)
 
 
 def save_model(model_decom, model_relight, savedir):
-	# Save the artifacts of the training
+    # Save the artifacts of the training
     print(f"Saving checkpoint to {savedir}...")
     # We can save everything we will need later in the checkpoint.
     checkpoint = {
@@ -146,8 +160,8 @@ def save_model(model_decom, model_relight, savedir):
 def load_model(checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
 
-    model_decomposition = retinex_model.DecomNet().to(device)
-    model_relight = retinex_model.RelightNet().to(device)
+    model_decomposition = DecomNet().to(device)
+    model_relight = RelightNet().to(device)
 
     model_decomposition.load_state_dict(checkpoint["model_decom_state_dict"])
     model_relight.load_state_dict(checkpoint["model_relight_state_dict"])
@@ -155,42 +169,55 @@ def load_model(checkpoint_path):
     return model_decomposition, model_relight
 
 
-
 if __name__ == "__main__":
 
-	# Hyperparameters
-	DECOM_NET_LR = 0.001
-	RELIGHT_NET_LR = 0.001
+    # Hyperparameters
+    DECOM_NET_LR = 0.001
+    RELIGHT_NET_LR = 0.001
 
-	wandb.login(relogin=True)
-	wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
+    wandb.login(relogin=True)
+    wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
 
-	# Get DataLoaders
-	train_data_loader, val_data_loader, test_data_loader \
-		= MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/data/train/low',  
-											path_high='/opt/proj_img_enhance/data/train/high')
+    # Get DataLoaders
+    train_data_loader, val_data_loader, test_data_loader \
+        = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/data/train/low', 
+                                          path_high='/opt/proj_img_enhance/data/train/high')
 
-	# Load the model blocks:
-	model_decomposition = retinex_model.DecomNet().to(device)
-	model_relight = retinex_model.RelightNet().to(device)
+    # Load the model blocks:
+    model_decomposition = DecomNet().to(device)
+    model_relight = RelightNet().to(device)
 
-	# Define optimizers:
-	optimizer_decom = optim.Adam(model_decomposition.parameters(), DECOM_NET_LR)
-	optimizer_relight = optim.Adam(model_relight.parameters(), RELIGHT_NET_LR)
+    # Define optimizers:
+    optimizer_decom = optim.Adam(model_decomposition.parameters(),
+                                 DECOM_NET_LR)
+    optimizer_relight = optim.Adam(model_relight.parameters(),
+                                   RELIGHT_NET_LR)
 
-	optimizer = optim.Adam([{"params": model_decomposition.parameters(), "lr": DECOM_NET_LR},
-							{"params": model_relight.parameters(), "lr": RELIGHT_NET_LR}])
+    optimizer = optim.Adam([{"params": model_decomposition.parameters(),
+                             "lr": DECOM_NET_LR},
+                            {"params": model_relight.parameters(),
+                             "lr": RELIGHT_NET_LR}])
 
-	print("Starting train")
-	for epoch in range(N_EPOCHS):
-		print(f"Epoch: {epoch}")
-		
-		# Train network end-to-end:
-		train_decom_loss, train_relight_loss = train(model_decomposition, model_relight,
-													 train_data_loader, optimizer)
+    epoch_train_decom_losses = []
+    epoch_train_relight_losses = []
+    epoch_train_total_losses = []
+    epoch_val_decom_losses = []
+    epoch_val_relight_losses = []
+    epoch_val_total_losses = []    
+    for epoch in range(N_EPOCHS):
+        print(f"Epoch: {epoch}")
+        print("Training")
+        # Train network end-to-end:
+        train_decom_loss, train_relight_loss, train_total_loss = train(model_decomposition, model_relight, train_data_loader, optimizer)
+        epoch_train_decom_losses.append(train_decom_loss)
+        epoch_train_relight_losses.append(train_relight_loss)
+        epoch_train_total_losses.append(train_total_loss)
 
-		# Train only decomposition network:
-		# train_decom(model_decomposition, train_data_loader, optimizer)      
+        print("Validation")
+        val_decom_loss, val_relight_loss, val_total_loss = eval(model_decomposition, model_relight, val_data_loader)
+        epoch_val_decom_losses.append(val_decom_loss)
+        epoch_val_relight_losses.append(val_relight_loss)
+        epoch_val_total_losses.append(val_total_loss)
 
-		# val_decom_loss = eval_decom(model_decomposition, val_data_loader)
-		# val_relight_loss = eval_relight(model_decomposition, model_relight, val_data_loader)
+
+
