@@ -39,9 +39,9 @@ def train(model_decom, model_rel, train_loader, opt):
     for j, (img_low, img_high) in enumerate(train_loader):
         optimizer.zero_grad()
         i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
-        losses_decom.append(loss_decom)
-        losses_relight.append(loss_relight)
-        loss_total.append(loss)
+        losses_decom.append(loss_decom.item())
+        losses_relight.append(loss_relight.item())
+        loss_total.append(loss.item())
         if j % 5 == 0:
             logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='train')
             logger.log_training(loss, loss_decom, loss_relight)
@@ -59,9 +59,9 @@ def eval(model_decom, model_rel, val_loader):
         model_relight.eval()
         for j, (img_low, img_high) in enumerate(val_loader):
             i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
-            losses_decom.append(loss_decom)
-            losses_relight.append(loss_relight)
-            loss_total.append(loss)
+            losses_decom.append(loss_decom.item())
+            losses_relight.append(loss_relight.item())
+            loss_total.append(loss.item())
             if j % 5 == 0:
                 logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='validation')
                 logger.log_eval(loss, loss_decom, loss_relight)

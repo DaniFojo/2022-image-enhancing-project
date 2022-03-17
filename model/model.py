@@ -187,9 +187,9 @@ def loss_decom_net(input_low, input_high, r_low, i_low, r_high, i_high):
     return loss_decom
 
 
-def loss_relight_net(input_high, r_low, i_delta):
-    i_delta3 = torch.concat((i_delta, i_delta, i_delta), dim=1)
-    loss_recon = torch.mean(torch.abs(input_high - r_low * i_delta3))
-    loss_illumination_smoothness = smooth(r_low, i_delta)
+def loss_relight_net(input_high, r_low, i_enhanced):
+    i_enhanced3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+    loss_recon = torch.mean(torch.abs(input_high - r_low * i_enhanced3))
+    loss_illumination_smoothness = smooth(r_low, i_enhanced)
     loss_relight = loss_recon + 3 * loss_illumination_smoothness
     return loss_relight
