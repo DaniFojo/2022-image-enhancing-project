@@ -33,7 +33,7 @@ def forward_losses(model_decom, model_rel, img_low, img_high):
 def train(model_decom, model_rel, train_loader, opt):
     losses_decom = []
     losses_relight = []
-    loss_total = []
+    losses_total = []
     model_decom.train()
     model_relight.train()
     for j, (img_low, img_high) in enumerate(train_loader):
@@ -41,19 +41,19 @@ def train(model_decom, model_rel, train_loader, opt):
         i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
         losses_decom.append(loss_decom.item())
         losses_relight.append(loss_relight.item())
-        loss_total.append(loss.item())
+        losses_total.append(loss.item())
         if j % 5 == 0:
             logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='train')
             logger.log_training(loss, loss_decom, loss_relight)
         loss.backward()
         opt.step()
-    return np.mean(loss_decom), np.mean(loss_relight), np.mean(loss_total)
+    return np.mean(losses_decom), np.mean(losses_relight), np.mean(losses_total)
 
 
 def eval(model_decom, model_rel, val_loader):    
     losses_decom = []
     losses_relight = []
-    loss_total = []
+    losses_total = []
     with torch.no_grad():
         model_decom.eval()
         model_relight.eval()
@@ -61,11 +61,10 @@ def eval(model_decom, model_rel, val_loader):
             i_low, i_high, r_low, r_high, i_enhanced, reconstructed, loss_decom, loss_relight, loss = forward_losses(model_decom, model_rel, img_low, img_high)
             losses_decom.append(loss_decom.item())
             losses_relight.append(loss_relight.item())
-            loss_total.append(loss.item())
-            if j % 5 == 0:
-                logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='validation')
-                logger.log_eval(loss, loss_decom, loss_relight)
-    return np.mean(loss_decom), np.mean(loss_relight), np.mean(loss_total)
+            losses_total.append(loss.item())
+            logger.log_images_grid(img_low, img_high, i_low, i_high, r_low, r_high, i_enhanced, reconstructed, mode='validation')
+            logger.log_eval(loss, loss_decom, loss_relight)
+    return np.mean(losses_decom), np.mean(losses_relight), np.mean(losses_total)
 
 
 def train_decom(model_decom, train_loader, opt):
@@ -146,13 +145,14 @@ def eval_relight(model_decom, model_rel, val_loader):
     return np.mean(losses)
 
 
-def save_model(model_decom, model_relight, savedir):
+def save_model(model_decom, model_relight, optimizer, savedir):
     # Save the artifacts of the training
     print(f"Saving checkpoint to {savedir}...")
     # We can save everything we will need later in the checkpoint.
     checkpoint = {
         "model_decom_state_dict": model_decom.cpu().state_dict(),
         "model_relight_state_dict": model_relight.cpu().state_dict(),
+        "optimizer_state_dict": optimizer.state_dict()
     }
     torch.save(checkpoint, savedir)
 
@@ -207,7 +207,6 @@ if __name__ == "__main__":
     for epoch in range(N_EPOCHS):
         print(f"Epoch: {epoch}")
         print("Training")
-        # Train network end-to-end:
         train_decom_loss, train_relight_loss, train_total_loss = train(model_decomposition, model_relight, train_data_loader, optimizer)
         epoch_train_decom_losses.append(train_decom_loss)
         epoch_train_relight_losses.append(train_relight_loss)
