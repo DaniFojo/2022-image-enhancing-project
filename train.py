@@ -152,8 +152,8 @@ def save_model(model_decom, model_relight, optimizer, epoch, savedir):
     print(f"Saving checkpoint to {savedir}...")
     # We can save everything we will need later in the checkpoint.
     checkpoint = {
-        "model_decom_state_dict": model_decom.cpu().state_dict(),
-        "model_relight_state_dict": model_relight.cpu().state_dict(),
+        "model_decom_state_dict": model_decom.state_dict(),
+        "model_relight_state_dict": model_relight.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "epoch": epoch
     }
