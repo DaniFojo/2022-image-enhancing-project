@@ -70,11 +70,9 @@ def eval(model_decom, model_rel, val_loader):
 
 
 def train_decom(model_decom, train_loader, opt):
-    losses = []
-    step = 0
+    losses_decom = []
     model_decom.train()
-    print("starting...")
-    for img_low, img_high in train_loader:
+    for j, (img_low, img_high) in enumerate(train_loader):
         opt.zero_grad()
         img_low, img_high = img_low.to(device), img_high.to(device)
         r_low, i_low = model_decom(img_low)
@@ -82,37 +80,32 @@ def train_decom(model_decom, train_loader, opt):
         loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
         loss.backward()
         opt.step()
-        losses.append(loss.item())
-        print(f"Step: {step}, loss: {loss.item()}")
-        step += 1
-
-    return np.mean(losses)
+        losses_decom.append(loss.item())
+        if j % 5 == 0:
+            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='train')
+            logger.log_training(loss_decom=loss)
+    return np.mean(losses_decom)
 
 
 def train_relight(model_decom, model_rel, train_loader, opt):
-    losses = []
-    step = 0
+    losses_relight = []
     model_decom.eval()
     model_rel.train()
-    for img_low, img_high in train_loader:
+    for j, (img_low, img_high) in enumerate(train_loader):
         opt.zero_grad()
         img_low, img_high = img_low.to(device), img_high.to(device)
         r_low, i_low = model_decom(img_low)
-        # esta parte de la red ya estaría entrenada.
-        # Solo habría que hacer el forward para
-        # obtener reflectance e illumination.
         i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
-
         loss = loss_relight_net(img_high, r_low, i_enhanced)
-        # i_delta = illumination delta - output of RelightNet
-        # (enhanced illumination for the low-light image)
         loss.backward()
         opt.step()
-        losses.append(loss.item())
-        print(f"Step: {step}, loss: {loss.item()}")
-        step += 1
-
-    return np.mean(losses)
+        losses_relight.append(loss.item())
+        if j % 5 == 0:
+            i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+            reconstructed = r_low * i_enhanced_3
+            logger.log_images_grid(i_enhanced=i_enhanced, reconstructed=reconstructed, mode='train')
+            logger.log_training(loss_relight=loss)
+    return np.mean(losses_relight)
 
 
 def eval_decom(model_decom, val_loader):
