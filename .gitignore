@@ -1,6 +1,7 @@
 .vscode/
 data/
 wandb/
+checkpoints/
 
 # Images flask
 application/static/uploads
