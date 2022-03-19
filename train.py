@@ -6,10 +6,12 @@ import wandb
 from model.model import DecomNet, RelightNet, loss_decom_net, loss_relight_net
 from dataloader import MyDataLoader
 from logger import WandbLogger
+import os
+from datetime import datetime
 
 
 # Constants
-N_EPOCHS = 5
+N_EPOCHS = 100
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = WandbLogger()
@@ -145,14 +147,15 @@ def eval_relight(model_decom, model_rel, val_loader):
     return np.mean(losses)
 
 
-def save_model(model_decom, model_relight, optimizer, savedir):
+def save_model(model_decom, model_relight, optimizer, epoch, savedir):
     # Save the artifacts of the training
     print(f"Saving checkpoint to {savedir}...")
     # We can save everything we will need later in the checkpoint.
     checkpoint = {
         "model_decom_state_dict": model_decom.cpu().state_dict(),
         "model_relight_state_dict": model_relight.cpu().state_dict(),
-        "optimizer_state_dict": optimizer.state_dict()
+        "optimizer_state_dict": optimizer.state_dict(),
+        "epoch": epoch
     }
     torch.save(checkpoint, savedir)
 
@@ -218,5 +221,6 @@ if __name__ == "__main__":
         epoch_val_relight_losses.append(val_relight_loss)
         epoch_val_total_losses.append(val_total_loss)
 
-
+        savedir = os.path.join('checkpoints/', datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
+        save_model(model_decomposition, model_relight, optimizer, epoch, savedir)
 
