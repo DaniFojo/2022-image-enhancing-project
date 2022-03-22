@@ -16,21 +16,18 @@ class WandbLogger():
         wdb_image = wandb.Image(grid, tag)
         return wdb_image
 
-    def log_images_grid(self, img_low=None, img_high=None, i_low=None, i_high=None, r_low=None, r_high=None, i_enhanced=None, reconstructed=None, mode='train'):
-        if mode == 'train':
-            suf = 'tr'
-        elif mode == 'validation':
-            suf = 'vl'
+    def log_images_grid(self, img_low=None, img_high=None, i_low=None, i_high=None, r_low=None, r_high=None, i_enhanced=None, reconstructed=None, mode='tr', net='decom'):
+        suf = f'{mode}_{net}'
 
         d = {}
 
         if img_low is not None:
-            wdb_low = self.make_grid_wandb(img_low, f"{suf}_img_low")
-            d[f"{suf}_img_low"] = wdb_low
+            wdb_low = self.make_grid_wandb(img_low, f"{suf}_image_low")
+            d[f"{suf}_image_low"] = wdb_low
 
         if img_high is not None:
-            wdb_high = self.make_grid_wandb(img_high, f"{suf}_img_high")
-            d[f"{suf}_img_high"] = wdb_high
+            wdb_high = self.make_grid_wandb(img_high, f"{suf}_image_high")
+            d[f"{suf}_image_high"] = wdb_high
 
         if i_low is not None:
             wdb_ilow = self.make_grid_wandb(i_low, f"{suf}_ilow")

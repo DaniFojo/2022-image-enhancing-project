@@ -30,7 +30,7 @@ def train_decom(model_decom, train_loader, opt):
         opt.step()
         losses_decom.append(loss.item())
         if j % 5 == 0:
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='train')
+            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
             logger.log_training(loss_decom=loss)
 
 
@@ -50,7 +50,7 @@ def train_relight(model_decom, model_rel, train_loader, opt):
         if j % 5 == 0:
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
-            logger.log_images_grid(i_enhanced=i_enhanced, reconstructed=reconstructed, mode='train')
+            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
             logger.log_training(loss_relight=loss)
 
 
@@ -64,7 +64,7 @@ def eval_decom(model_decom, val_loader):
             r_high, i_high = model_decom(img_high)
             loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
             losses.append(loss.item())
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='validation')
+            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='vl', net='decom')
             logger.log_training(loss_decom=loss)
     return np.mean(losses)
 
@@ -82,7 +82,7 @@ def eval_relight(model_decom, model_rel, val_loader):
             losses.append(loss.item())
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
-            logger.log_images_grid(i_enhanced=i_enhanced, reconstructed=reconstructed, mode='validation')
+            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='vl', net='rel')
             logger.log_training(loss_relight=loss)            
     return np.mean(losses)
 
@@ -139,18 +139,18 @@ if __name__ == "__main__":
         print("Validation Decompostion")
         eval_decom(model_decomposition, val_data_loader)
 
-        savedir = os.path.join('checkpoints', 'decompostion', datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
-        save_model(model_decomposition, optimizer_decomposition, epoch, savedir)
+        # savedir = os.path.join('checkpoints', 'decompostion', datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
+        # save_model(model_decomposition, optimizer_decomposition, epoch, savedir)
 
 
     for epoch in range(N_EPOCHS):
         print(f"Epoch: {epoch}")
 
         print("Training Relight")
-        train_relight(model_relight, train_data_loader, optimizer_relight)
+        train_relight(model_decomposition, model_relight, train_data_loader, optimizer_relight)
 
         print("Validation Relight")
-        eval_relight(model_relight, val_data_loader)
+        eval_relight(model_decomposition, model_relight, val_data_loader)
 
-        savedir = os.path.join('checkpoints', 'relight', datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
-        save_model(model_relight, optimizer_relight, epoch, savedir)
+        # savedir = os.path.join('checkpoints', 'relight', datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
+        # save_model(model_relight, optimizer_relight, epoch, savedir)
