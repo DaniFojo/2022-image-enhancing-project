@@ -31,7 +31,7 @@ def train_decom(model_decom, train_loader, opt):
         losses_decom.append(loss.item())
         if j % 5 == 0:
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
-            logger.log_training(loss_decom=loss)
+            logger.log_loss(loss=loss, mode='tr', net='decom')
 
 
 def train_relight(model_decom, model_rel, train_loader, opt):
@@ -51,7 +51,7 @@ def train_relight(model_decom, model_rel, train_loader, opt):
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
-            logger.log_training(loss_relight=loss)
+            logger.log_loss(loss=loss, mode='tr', net='rel')
 
 
 def eval_decom(model_decom, val_loader):
@@ -65,7 +65,7 @@ def eval_decom(model_decom, val_loader):
             loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
             losses.append(loss.item())
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='vl', net='decom')
-            logger.log_training(loss_decom=loss)
+            logger.log_loss(loss=loss, mode='vl', net='decom')
     return np.mean(losses)
 
 
@@ -77,13 +77,13 @@ def eval_relight(model_decom, model_rel, val_loader):
         for img_low, img_high in val_loader:
             img_low, img_high = img_low.to(device), img_high.to(device)
             r_low, i_low = model_decom(img_low)
-            i_enhanced = model_rel(torch.concat(r_low, i_low))
+            i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
             loss = loss_relight_net(img_high, r_low, i_enhanced)
             losses.append(loss.item())
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='vl', net='rel')
-            logger.log_training(loss_relight=loss)            
+            logger.log_loss(loss=loss, mode='vl', net='rel')  
     return np.mean(losses)
 
 

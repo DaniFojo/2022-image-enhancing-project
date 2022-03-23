@@ -70,5 +70,8 @@ class WandbLogger():
     def log_training(self, loss_total=0, loss_decom=0, loss_relight=0) :
         wandb.log({"loss_total_train": loss_total, "loss_decom_train": loss_decom, "loss_relight_train": loss_relight})
 
-    def log_eval(self, loss_total, loss_decom=0, loss_relight=0) :
+    def log_eval(self, loss_total=0, loss_decom=0, loss_relight=0) :
         wandb.log({"loss_total_eval": loss_total, "loss_decom_eval": loss_decom, "loss_relight_eval": loss_relight})
+
+    def log_loss(self, loss, mode, net):
+        wandb.log({f"loss_{mode}_{net}": loss})
