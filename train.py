@@ -28,10 +28,14 @@ def train_decom(model_decom, train_loader, opt):
         loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
         loss.backward()
         opt.step()
+        scheduler_decom.step(loss)
         losses_decom.append(loss.item())
         if j % 5 == 0:
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
             logger.log_loss(loss=loss, mode='tr', net='decom')
+            lr_num = opt.param_groups[0]['lr'].item()
+            print("last learning rate: ", lr_num)
+            logger.log_learning_rate(opt, net='decom')
 
 
 def train_relight(model_decom, model_rel, train_loader, opt):
@@ -46,12 +50,14 @@ def train_relight(model_decom, model_rel, train_loader, opt):
         loss = loss_relight_net(img_high, r_low, i_enhanced)
         loss.backward()
         opt.step()
+        scheduler_relight.step(loss)
         losses_relight.append(loss.item())
         if j % 5 == 0:
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
             logger.log_loss(loss=loss, mode='tr', net='rel')
+            logger.log_learning_rate(opt, net='rel')
 
 
 def eval_decom(model_decom, val_loader):
@@ -113,9 +119,6 @@ if __name__ == "__main__":
     DECOM_NET_LR = 0.001
     RELIGHT_NET_LR = 0.001
 
-    wandb.login(relogin=True)
-    wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
-
     # Get DataLoaders
     train_data_loader, val_data_loader, test_data_loader \
         = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/data/train/low', 
@@ -128,6 +131,16 @@ if __name__ == "__main__":
     # Define optimizers:
     optimizer_decomposition = optim.Adam(model_decomposition.parameters(), DECOM_NET_LR)
     optimizer_relight = optim.Adam(model_relight.parameters(), RELIGHT_NET_LR)
+
+    # Define learning rate scheduler:
+
+    # ReduceLROnPlateau:
+    # scheduler_decom = optim.lr_scheduler.ReduceLROnPlateau(optimizer_decomposition, patience=150, factor=0.5)
+    # scheduler_relight = optim.lr_scheduler.ReduceLROnPlateau(optimizer_relight, patience=150, factor=0.5)
+
+    # StepLR:
+    scheduler_decom = optim.lr_scheduler.StepLR(optimizer_decomposition, step_size=1, gamma=0.95)
+    scheduler_relight = optim.lr_scheduler.StepLR(optimizer_relight, step_size=1, gamma=0.95)
 
 
     for epoch in range(N_EPOCHS):

@@ -7,6 +7,7 @@ from torchvision.utils import make_grid
 class WandbLogger():
     def __init__(self, task = ""):
         wandb.login()
+        # wandb.init(project="retinex", mode="disabled") # disable wandb logging.
         wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
         # Por si queremos añadir nombre y fecha a la tarea
         # wandb.run.name = f'{task}-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
@@ -75,3 +76,7 @@ class WandbLogger():
 
     def log_loss(self, loss, mode, net):
         wandb.log({f"loss_{mode}_{net}": loss})
+
+    def log_learning_rate(self, opt, net):
+        lr = opt.param_groups[0]['lr'].item()
+        wandb.log({f"learning_rate_{net}": lr})
