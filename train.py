@@ -28,7 +28,6 @@ def train_decom(model_decom, train_loader, opt):
         loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
         loss.backward()
         opt.step()
-        scheduler_decom.step(loss)
         losses_decom.append(loss.item())
         if j % 5 == 0:
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
@@ -36,6 +35,7 @@ def train_decom(model_decom, train_loader, opt):
             lr_num = opt.param_groups[0]['lr'].item()
             print("last learning rate: ", lr_num)
             logger.log_learning_rate(opt, net='decom')
+    scheduler_decom.step(loss)
 
 
 def train_relight(model_decom, model_rel, train_loader, opt):
@@ -50,7 +50,6 @@ def train_relight(model_decom, model_rel, train_loader, opt):
         loss = loss_relight_net(img_high, r_low, i_enhanced)
         loss.backward()
         opt.step()
-        scheduler_relight.step(loss)
         losses_relight.append(loss.item())
         if j % 5 == 0:
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
@@ -58,6 +57,7 @@ def train_relight(model_decom, model_rel, train_loader, opt):
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
             logger.log_loss(loss=loss, mode='tr', net='rel')
             logger.log_learning_rate(opt, net='rel')
+    scheduler_relight.step(loss)
 
 
 def eval_decom(model_decom, val_loader):
@@ -139,6 +139,7 @@ if __name__ == "__main__":
     # scheduler_relight = optim.lr_scheduler.ReduceLROnPlateau(optimizer_relight, patience=150, factor=0.5)
 
     # StepLR:
+	# Decays the learning rate of each parameter group by gamma every step_size epochs.
     scheduler_decom = optim.lr_scheduler.StepLR(optimizer_decomposition, step_size=1, gamma=0.95)
     scheduler_relight = optim.lr_scheduler.StepLR(optimizer_relight, step_size=1, gamma=0.95)
 
