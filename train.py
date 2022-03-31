@@ -3,7 +3,7 @@ import torch.optim as optim
 import numpy as np
 from torchvision.utils import make_grid
 import wandb
-from model.model import DecomNet, RelightNet, loss_decom_net, loss_relight_net
+from model.model import DecomNet, RelightNet, RelightNetConvTrans, loss_decom_net, loss_relight_net
 from dataloader import MyDataLoader
 from logger import WandbLogger
 import os
@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 # Constants
-N_EPOCHS = 2
+N_EPOCHS = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = WandbLogger()
@@ -32,7 +32,7 @@ def train_decom(model_decom, train_loader, opt):
         if j % 5 == 0:
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
             logger.log_loss(loss=loss, mode='tr', net='decom')
-            lr_num = opt.param_groups[0]['lr'].item()
+            lr_num = opt.param_groups[0]['lr']
             print("last learning rate: ", lr_num)
             logger.log_learning_rate(opt, net='decom')
     scheduler_decom.step(loss)
@@ -126,7 +126,8 @@ if __name__ == "__main__":
 
     # Load the model blocks:
     model_decomposition = DecomNet().to(device)
-    model_relight = RelightNet().to(device)
+    # model_relight = RelightNet().to(device)
+    model_relight = RelightNetConvTrans().to(device)
 
     # Define optimizers:
     optimizer_decomposition = optim.Adam(model_decomposition.parameters(), DECOM_NET_LR)

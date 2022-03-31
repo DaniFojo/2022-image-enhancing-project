@@ -87,14 +87,14 @@ class RelightNet(nn.Module):
         x1 = F.relu(self.conv1(x0))
         x2 = F.relu(self.conv2(x1))
         x3 = F.relu(self.conv3(x2))
-        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='nearest')
+        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='bicubic')
         x4 = F.relu(self.deconv1(x4)) + x2
-        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='nearest')
+        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='bicubic')
         x5 = F.relu(self.deconv2(x5)) + x1
-        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='nearest')
+        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='bicubic')
         x6 = F.relu(self.deconv3(x6)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)
@@ -137,8 +137,8 @@ class RelightNetConvTrans(nn.Module):
         x4 = F.relu(self.deconv1(x3)) + x2
         x5 = F.relu(self.deconv2(x4)) + x1
         x6 = F.relu(self.deconv3(x5)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)

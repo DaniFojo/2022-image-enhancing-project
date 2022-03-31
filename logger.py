@@ -78,5 +78,5 @@ class WandbLogger():
         wandb.log({f"loss_{mode}_{net}": loss})
 
     def log_learning_rate(self, opt, net):
-        lr = opt.param_groups[0]['lr'].item()
+        lr = opt.param_groups[0]['lr']
         wandb.log({f"learning_rate_{net}": lr})
