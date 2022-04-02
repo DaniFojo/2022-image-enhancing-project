@@ -23,8 +23,12 @@ def forward_losses(model_decom, model_rel, img_low, img_high):
     r_high, i_high = model_decom(img_high)
     r_low, i_low = r_low.to(device), i_low.to(device)
     r_high, i_high = r_high.to(device), i_high.to(device)
-    loss_decom = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
-    i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
+    loss_decom = loss_decom_net(img_low, img_high, r_low, i_low)
+
+    # Tryin with only ones, r_high, i_high)
+    #i_enhanced = model_rel(torch.concat((r_low, i_low), dim=1))
+    i_enhanced = torch.ones(i_enhanced.shape)
+    
     loss_relight = loss_relight_net(img_high, r_low, i_enhanced)
     loss = loss_decom + loss_relight
     i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
