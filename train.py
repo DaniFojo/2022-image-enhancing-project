@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 # Constants
-N_EPOCHS = 2
+N_EPOCHS = 20
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if device == "cpu":
@@ -20,7 +20,7 @@ if device == "cpu":
 logger = WandbLogger()
 
 
-def train_decom(model_decom, train_loader, opt, sch):
+def train_decom(model_decom, train_loader, opt):
     losses_decom = []
     model_decom.train()
     for j, (img_low, img_high) in enumerate(train_loader):
@@ -32,14 +32,12 @@ def train_decom(model_decom, train_loader, opt, sch):
         loss.backward()
         opt.step()
         losses_decom.append(loss.item())
-        if j % 5 == 0:
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
-            logger.log_loss(loss=loss, mode='tr', net='decom')
-            logger.log_learning_rate(opt, net='decom')
-    sch.step(loss)
+    loss_mean_decomposition = np.mean(losses_decom)
+    logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
+    logger.log_loss(loss=loss_mean_decomposition, mode='tr', net='decom')
 
 
-def train_relight(model_decom, model_rel, train_loader, opt, sch):
+def train_relight(model_decom, model_rel, train_loader, opt):
     losses_relight = []
     model_decom.eval()
     model_rel.train()
@@ -52,13 +50,11 @@ def train_relight(model_decom, model_rel, train_loader, opt, sch):
         loss.backward()
         opt.step()
         losses_relight.append(loss.item())
-        if j % 5 == 0:
-            i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
-            reconstructed = r_low * i_enhanced_3
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
-            logger.log_loss(loss=loss, mode='tr', net='rel')
-            logger.log_learning_rate(opt, net='rel')
-    sch.step(loss)
+    i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+    reconstructed = r_low * i_enhanced_3
+    loss_mean_relight = np.mean(losses_relight)
+    logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='tr', net='rel')
+    logger.log_loss(loss=loss_mean_relight, mode='tr', net='rel')
 
 
 def eval_decom(model_decom, val_loader):
@@ -71,9 +67,10 @@ def eval_decom(model_decom, val_loader):
             r_high, i_high = model_decom(img_high)
             loss = loss_decom_net(img_low, img_high, r_low, i_low, r_high, i_high)
             losses.append(loss.item())
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='vl', net='decom')
-            logger.log_loss(loss=loss, mode='vl', net='decom')
-    return np.mean(losses)
+        loss_mean_decomposition = np.mean(losses)
+        logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='vl', net='decom')
+        logger.log_loss(loss=loss_mean_decomposition, mode='vl', net='decom')
+    return loss_mean_decomposition
 
 
 def eval_relight(model_decom, model_rel, val_loader):
@@ -89,9 +86,10 @@ def eval_relight(model_decom, model_rel, val_loader):
             losses.append(loss.item())
             i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
             reconstructed = r_low * i_enhanced_3
-            logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='vl', net='rel')
-            logger.log_loss(loss=loss, mode='vl', net='rel')  
-    return np.mean(losses)
+        loss_mean_relight = np.mean(losses)
+        logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, r_low=r_low, i_enhanced=i_enhanced, reconstructed=reconstructed, mode='vl', net='rel')
+        logger.log_loss(loss=loss_mean_relight, mode='vl', net='rel')  
+    return loss_mean_relight
 
 
 def save_model(model, optimizer, epoch, savedir):
@@ -135,7 +133,7 @@ if __name__ == "__main__":
 
     # ReduceLROnPlateau:
 	# Reduce learning rate when a metric has stopped improving.
-    scheduler_decom = optim.lr_scheduler.ReduceLROnPlateau(optimizer_decomposition, patience=5, factor=0.5)
+    scheduler_decomposition = optim.lr_scheduler.ReduceLROnPlateau(optimizer_decomposition, patience=5, factor=0.5)
     scheduler_relight = optim.lr_scheduler.ReduceLROnPlateau(optimizer_relight, patience=5, factor=0.5)
 
     # StepLR:
@@ -149,30 +147,38 @@ if __name__ == "__main__":
     path_relight = os.path.join('checkpoints', 'relight', date_dir)
     os.mkdir(path_relight)
 
-    for epoch in range(N_EPOCHS):
+    for epoch in range(1, N_EPOCHS+1):
         print(f"Epoch: {epoch}")
 
         print("Training Decompostion")
-        train_decom(model_decomposition, train_data_loader, optimizer_decomposition, scheduler_decomposition)
+        train_decom(model_decomposition, train_data_loader, optimizer_decomposition)
 
         print("Validation Decompostion")
-        eval_decom(model_decomposition, val_data_loader)
+        loss_mean_decomposition = eval_decom(model_decomposition, val_data_loader)
+        scheduler_decomposition.step(loss_mean_decomposition)
+        logger.log_learning_rate(optimizer_decomposition, net='decom')
 
-        savedir = os.path.join(path_decomposition, f"model_decomposition_epoch_{epoch}.pt")
-        save_model(model_decomposition, optimizer_decomposition, epoch, savedir)
+        if epoch % 10 == 0:
+            savedir = os.path.join(path_decomposition, f"model_decomposition_epoch_{epoch}.pt")
+            save_model(model_decomposition, optimizer_decomposition, epoch, savedir)
 
 
-    for epoch in range(N_EPOCHS):
+    for epoch in range(1, N_EPOCHS+1):
         print(f"Epoch: {epoch}")
 
         print("Training Relight")
-        train_relight(model_decomposition, model_relight, train_data_loader, optimizer_relight, scheduler_relight)
+        train_relight(model_decomposition, model_relight, train_data_loader, optimizer_relight)
 
         print("Validation Relight")
-        eval_relight(model_decomposition, model_relight, val_data_loader)
+        loss_mean_relight = eval_relight(model_decomposition, model_relight, val_data_loader)
+        scheduler_relight.step(loss_mean_relight)
+        logger.log_learning_rate(optimizer_relight, net='rel')
 
-        savedir = os.path.join(path_relight, f"model_relight_epoch_{epoch}.pt")
-        save_model(model_relight, optimizer_relight, epoch, savedir)
+        if epoch % 10 == 0:
+            savedir = os.path.join(path_relight, f"model_relight_epoch_{epoch}.pt")
+            save_model(model_relight, optimizer_relight, epoch, savedir)
+
+
 
     # path_decomposition = os.path.join('checkpoints', 'decomposition', '2022_04_07_13_15_25','model_decomposition_epoch_1.pt')
     # path_relight = os.path.join('checkpoints', 'relight', '2022_04_07_13_15_25', 'model_relight_epoch_1.pt')
