@@ -14,6 +14,15 @@ class MyDataset(Dataset):
         self.name_index_list = [os.path.basename(name) for name in glob.glob(
             os.path.join(self.images_path_high, "./*.png"))]
 
+        # Read image
+        # img = Image.open(images_path_high + '/1.png')
+        
+        # Output Images
+        # img.show()
+        
+        # prints format of image
+        # print(img.format)
+
     def __len__(self):
         return len(self.name_index_list)
 

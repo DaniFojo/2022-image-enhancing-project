@@ -1,6 +1,7 @@
 .vscode/
 data/
 wandb/
+checkpoints/
 
 # Images flask
 application/static/uploads
@@ -134,3 +135,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+nohup.out

@@ -3,11 +3,12 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision as tv
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DecomNet(nn.Module):
     """
     Convolutional NN
-    Takes in paired low/normal-light images and learns the decomposition for both.
+    Takes in paired low/high-light images and learns the decomposition for both.
     Constraint: images share the same reflectance.
     """
 
@@ -43,8 +44,8 @@ class DecomNet(nn.Module):
         x = self.conv6(x)
 
         # Reflectance and illuminance
-        reflectance = F.sigmoid(x[:, 0:3, :, :])
-        illumination = F.sigmoid(x[:, 3:4, :, :])
+        reflectance = torch.sigmoid(x[:, 0:3, :, :])
+        illumination = torch.sigmoid(x[:, 3:4, :, :])
         return reflectance, illumination
 
 
@@ -86,14 +87,14 @@ class RelightNet(nn.Module):
         x1 = F.relu(self.conv1(x0))
         x2 = F.relu(self.conv2(x1))
         x3 = F.relu(self.conv3(x2))
-        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='nearest')
+        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='bicubic')
         x4 = F.relu(self.deconv1(x4)) + x2
-        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='nearest')
+        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='bicubic')
         x5 = F.relu(self.deconv2(x5)) + x1
-        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='nearest')
+        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='bicubic')
         x6 = F.relu(self.deconv3(x6)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)
@@ -136,8 +137,8 @@ class RelightNetConvTrans(nn.Module):
         x4 = F.relu(self.deconv1(x3)) + x2
         x5 = F.relu(self.deconv2(x4)) + x1
         x6 = F.relu(self.deconv3(x5)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='nearest')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='nearest')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)
@@ -154,8 +155,8 @@ def smooth(r, i):
 
 def gradient(input_tensor, direction):
     smooth_kernel_x = torch.reshape(torch.tensor([[0, 0], [-1, 1]],
-                                    dtype=torch.float32), (1, 1, 2, 2))
-    smooth_kernel_y = torch.transpose(smooth_kernel_x, dim0=2, dim1=3)
+                                    dtype=torch.float32), (1, 1, 2, 2)).to(device)
+    smooth_kernel_y = torch.transpose(smooth_kernel_x, dim0=2, dim1=3).to(device)
     if direction == "x":
         kernel = smooth_kernel_x
     elif direction == "y":
@@ -186,9 +187,9 @@ def loss_decom_net(input_low, input_high, r_low, i_low, r_high, i_high):
     return loss_decom
 
 
-def loss_relight_net(input_high, r_low, i_delta):
-    i_delta3 = torch.concat((i_delta, i_delta, i_delta), dim=1)
-    loss_recon = torch.mean(torch.abs(input_high - r_low * i_delta3))
-    loss_illumination_smoothness = smooth(r_low, i_delta)
+def loss_relight_net(input_high, r_low, i_enhanced):
+    i_enhanced3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+    loss_recon = torch.mean(torch.abs(input_high - r_low * i_enhanced3))
+    loss_illumination_smoothness = smooth(r_low, i_enhanced)
     loss_relight = loss_recon + 3 * loss_illumination_smoothness
     return loss_relight
