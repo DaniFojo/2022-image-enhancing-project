@@ -11,9 +11,12 @@ from datetime import datetime
 
 
 # Constants
-N_EPOCHS = 1
+N_EPOCHS = 30
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if device == "cpu":
+	print("WARNING: running on cpu.")
+
 logger = WandbLogger()
 
 
@@ -32,8 +35,6 @@ def train_decom(model_decom, train_loader, opt):
         if j % 5 == 0:
             logger.log_images_grid(img_low=img_low, img_high=img_high, i_low=i_low, i_high=i_high, r_low=r_low, r_high=r_high, mode='tr', net='decom')
             logger.log_loss(loss=loss, mode='tr', net='decom')
-            lr_num = opt.param_groups[0]['lr']
-            print("last learning rate: ", lr_num)
             logger.log_learning_rate(opt, net='decom')
     scheduler_decom.step(loss)
 
@@ -126,8 +127,8 @@ if __name__ == "__main__":
 
     # Load the model blocks:
     model_decomposition = DecomNet().to(device)
-    # model_relight = RelightNet().to(device)
-    model_relight = RelightNetConvTrans().to(device)
+    model_relight = RelightNet().to(device)
+    # model_relight = RelightNetConvTrans().to(device)
 
     # Define optimizers:
     optimizer_decomposition = optim.Adam(model_decomposition.parameters(), DECOM_NET_LR)
@@ -136,13 +137,14 @@ if __name__ == "__main__":
     # Define learning rate scheduler:
 
     # ReduceLROnPlateau:
-    # scheduler_decom = optim.lr_scheduler.ReduceLROnPlateau(optimizer_decomposition, patience=150, factor=0.5)
-    # scheduler_relight = optim.lr_scheduler.ReduceLROnPlateau(optimizer_relight, patience=150, factor=0.5)
+	# Reduce learning rate when a metric has stopped improving.
+    scheduler_decom = optim.lr_scheduler.ReduceLROnPlateau(optimizer_decomposition, patience=5, factor=0.5)
+    scheduler_relight = optim.lr_scheduler.ReduceLROnPlateau(optimizer_relight, patience=5, factor=0.5)
 
     # StepLR:
 	# Decays the learning rate of each parameter group by gamma every step_size epochs.
-    scheduler_decom = optim.lr_scheduler.StepLR(optimizer_decomposition, step_size=1, gamma=0.95)
-    scheduler_relight = optim.lr_scheduler.StepLR(optimizer_relight, step_size=1, gamma=0.95)
+    # scheduler_decom = optim.lr_scheduler.StepLR(optimizer_decomposition, step_size=1, gamma=0.95)
+    # scheduler_relight = optim.lr_scheduler.StepLR(optimizer_relight, step_size=1, gamma=0.95)
 
 
     for epoch in range(N_EPOCHS):

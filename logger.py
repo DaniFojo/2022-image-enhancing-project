@@ -79,4 +79,5 @@ class WandbLogger():
 
     def log_learning_rate(self, opt, net):
         lr = opt.param_groups[0]['lr']
+        print("last learning rate: ", lr)
         wandb.log({f"learning_rate_{net}": lr})
