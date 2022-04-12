@@ -8,7 +8,8 @@ class WandbLogger():
     def __init__(self, task = ""):
         wandb.login()
         # wandb.init(project="retinex", mode="disabled") # disable wandb logging.
-        wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
+        wandb.init(entity='aidl_retinex', project="retinex")
+        #wandb.init(project="retinex")  # añadir hyperparameters en el init de wandb
         # Por si queremos añadir nombre y fecha a la tarea
         # wandb.run.name = f'{task}-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
 
