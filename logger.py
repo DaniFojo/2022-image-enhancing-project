@@ -17,7 +17,7 @@ class WandbLogger():
         wdb_image = wandb.Image(grid, tag)
         return wdb_image
 
-    def log_images_grid(self, img_low=None, img_high=None, i_low=None, i_high=None, r_low=None, r_high=None, i_enhanced=None, reconstructed=None, mode='tr', net='decom'):
+    def log_images_grid(self, img_low=None, img_high=None, i_low=None, i_high=None, r_low=None, r_high=None, i_enhanced=None, reconstructed=None, mode='tr', net='decom', step=None):
         suf = f'{mode}_{net}'
 
         d = {}
@@ -54,30 +54,12 @@ class WandbLogger():
             wdb_reconstructed = self.make_grid_wandb(reconstructed, f"{suf}_reconstructed")
             d[f"{suf}_reconstructed"] = wdb_reconstructed
 
-        wandb.log(d)
+        wandb.log(d, step=step)
 
 
+    def log_loss(self, loss, mode, net, step):
+        wandb.log({f"loss_{mode}_{net}": loss}, step=step)
 
-    def log_images_grid_asPaper(self, img_low, img_high, i_low, i_norm, r_low, r_high, i_enhanced):
-        aux_1 = torch.full((3,300, 300), 1)
-        aux_2 = torch.full((3,150, 300), 1)
-        col1 = torch.cat((aux_2, img_high, aux_1, img_low, aux_2), 1)
-        col2 = torch.cat((r_high, i_norm, r_low, i_low), 1)
-        col3 = torch.cat((aux_1, aux_1, aux_2, i_enhanced, aux_2), 1)
-        grid = torch.cat((col1, col2, col3), 2)
-        wdb_grid = wandb.Image(grid, "batch_example")
-        wandb.log({"batch_example": wdb_grid})
-
-    def log_training(self, loss_total=0, loss_decom=0, loss_relight=0) :
-        wandb.log({"loss_total_train": loss_total, "loss_decom_train": loss_decom, "loss_relight_train": loss_relight})
-
-    def log_eval(self, loss_total=0, loss_decom=0, loss_relight=0) :
-        wandb.log({"loss_total_eval": loss_total, "loss_decom_eval": loss_decom, "loss_relight_eval": loss_relight})
-
-    def log_loss(self, loss, mode, net):
-        wandb.log({f"loss_{mode}_{net}": loss})
-
-    def log_learning_rate(self, opt, net):
+    def log_learning_rate(self, opt, net, step):
         lr = opt.param_groups[0]['lr']
-        print("last learning rate: ", lr)
-        wandb.log({f"learning_rate_{net}": lr})
+        wandb.log({f"learning_rate_{net}": lr}, step=step)
