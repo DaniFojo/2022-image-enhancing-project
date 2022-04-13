@@ -8,8 +8,7 @@ from PIL import Image
 from torchvision.transforms.functional import to_pil_image
 import torch
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
+sys.path.insert(1, os.path.join(sys.path[0], '..'))  # Necesario para importar módulo desde el parent folder.
 from utils import create_directory_if_not_exists, load_model
 
 
@@ -21,45 +20,75 @@ def create_app():
 
 app = create_app()
 
-model_decomposition = None
-model_relight = None
+model_decom_split = None
+model_relight_split = None
 
 
-# The code in this function will be executed before we recieve any request
-@app.before_first_request
-def _load_model():
-
-    path_self = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-    path_parent = os.path.dirname(path_self)
-    print("path_self: ", path_self)
-    print("path_parent: ", path_parent)
-
-    # path_decomposition = os.path.join('checkpoints', 'split', 'decomposition', '2022_04_07_13_15_25','model_decomposition_epoch_1.pt')
-    path_decomposition = os.path.join(path_parent, 'checkpoints', 'decomposition', 
-                                        '2022_04_09_15_27_49','model_decomposition_epoch_100.pt')
-
-    # path_relight = os.path.join('checkpoints', 'split', 'relight', '2022_04_07_13_15_25', 'model_relight_epoch_1.pt')
-    path_relight = os.path.join(path_parent, 'checkpoints', 'relight', '2022_04_09_15_27_49', 'model_relight_epoch_100.pt')
+def load_model_pair(decom_pt_file_name, relight_pt_file_name):
+    base_path = os.path.join('/opt', 'proj_img_enhance', 'checkpoints')
+    path_decomposition = os.path.join(base_path, decom_pt_file_name)
+    path_relight = os.path.join(base_path, relight_pt_file_name)
 
     print("path_decomposition: ", path_decomposition)
     print("path_relight: ", path_relight)
 
-    global model_decomposition, model_relight
+    print("Loading models...")
+    mdl_decom = load_model(path_decomposition, 'decom', 'cpu')
+    mdl_rel = load_model(path_relight, 'relight', 'cpu')
 
-    model_decomposition = load_model(path_decomposition, 'decom', 'cpu')
-    model_relight = load_model(path_relight, 'relight', 'cpu')
-
-    # Poner modelos en modo eval:
-    model_decomposition.eval()
-    model_relight.eval()
+    # Set eval mode:
+    mdl_decom.eval()
+    mdl_rel.eval()
 
     torch.set_grad_enabled(False)
 
-    print("modelos cargados.")
+    print("Models loaded.")
 
-    # eval_decom(model_decomposition, test_data_loader)
-    # eval_relight(model_decomposition, model_relight, test_data_loader)
+    return mdl_decom, mdl_rel
 
+
+
+def enhance_image(path_img_low, model_decom, model_relight):
+
+    sample_low = Image.open(path_img_low)
+    orig_img_size = (sample_low.size)
+    print("orig size: ", orig_img_size)
+
+    # Aplicar image enhancing:
+    transform = transforms.Compose(
+        [transforms.Resize([297, 297]), transforms.ToTensor()])    
+    sample_low = transform(sample_low)    
+    # Add batch dimension:
+    sample_low = sample_low.unsqueeze(0)
+    print("sample_low shape: ", sample_low.shape)
+
+    img_reflectance, img_illuminance = model_decom(sample_low)
+    i_enhanced = model_relight(torch.concat((img_reflectance, img_illuminance), dim=1))
+
+    i_enhanced_3 = torch.concat((i_enhanced, i_enhanced, i_enhanced), dim=1)
+    img_reconstructed = img_reflectance * i_enhanced_3
+
+    print("img_reconstructed: ", img_reconstructed.shape)
+    
+    # Discard batch dimension:
+    img_reconstructed = img_reconstructed.squeeze()
+
+    # Convertir tensor a png:
+    pil_img = to_pil_image(img_reconstructed)
+    pil_img = pil_img.resize(orig_img_size)
+
+    return pil_img
+
+
+
+# The code in this function will be executed before we recieve any request
+@app.before_first_request
+def _load_models():
+
+    global model_decom_split, model_relight_split
+
+    model_decom_split, model_relight_split = load_model_pair(os.path.join('split', 'model_decom_split.pt'), 
+                                                             os.path.join('split', 'model_relight_split.pt'))
 
 
 
@@ -84,27 +113,11 @@ def upload_image():
         path_img_low = os.path.join(path_uploads, image.filename)
         image.save(path_img_low)
 
-        # Aplicar image enhancing:
-        sample_low = Image.open(path_img_low)
-        transform = transforms.Compose(
-            [transforms.Resize([297, 297]), transforms.ToTensor()])    
-        sample_low = transform(sample_low)    
-        # Add batch dimension:
-        sample_low = sample_low.unsqueeze(0)
-        print("sample_low shape: ", sample_low.shape)
-
-        img_reflectance, img_illuminance = model_decomposition(sample_low)
-        print("img_reflectance: ", img_reflectance.shape)
-        print("img_illuminance: ", img_illuminance.shape)
-        # Quitar dimensión del batch:
-        img_reflectance = img_reflectance.squeeze()
-        img_illuminance = img_illuminance.squeeze()
-
-        illuminance_pil = to_pil_image(img_illuminance)
-        illuminance_pil.save(os.path.join(path_uploads, "illum.png"))
+        reconstructed_img = enhance_image(path_img_low, model_decom_split, model_relight_split)
+        reconstructed_img.save(os.path.join(path_uploads, "reconst_split.png"))
 
         # Mostrar resultados:
-        return render_template('upload_image.html', form=form, filename=image.filename, img_enhanced="illum.png")
+        return render_template('upload_image.html', form=form, filename=image.filename, img_enhanced="reconst_split.png")
 
     # Mostrar pantalla para subir imagen:
     return render_template('upload_image.html', form=form)
