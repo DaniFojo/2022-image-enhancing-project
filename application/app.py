@@ -6,6 +6,7 @@ from forms import ImageForm
 from torchvision import transforms
 from PIL import Image
 from torchvision.transforms.functional import to_pil_image
+import torch
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -47,6 +48,12 @@ def _load_model():
 
     model_decomposition = load_model(path_decomposition, 'decom', 'cpu')
     model_relight = load_model(path_relight, 'relight', 'cpu')
+
+    # Poner modelos en modo eval:
+    model_decomposition.eval()
+    model_relight.eval()
+
+    torch.set_grad_enabled(False)
 
     print("modelos cargados.")
 
@@ -90,6 +97,7 @@ def upload_image():
         print("img_reflectance: ", img_reflectance.shape)
         print("img_illuminance: ", img_illuminance.shape)
         # Quitar dimensión del batch:
+        img_reflectance = img_reflectance.squeeze()
         img_illuminance = img_illuminance.squeeze()
 
         illuminance_pil = to_pil_image(img_illuminance)
