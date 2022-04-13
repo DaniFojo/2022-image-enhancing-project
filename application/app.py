@@ -87,7 +87,7 @@ def upload_image():
         # Aplicar image enhancing:
         sample_low = Image.open(path_img_low)
         transform = transforms.Compose(
-            [transforms.Resize([300, 300]), transforms.ToTensor()])    
+            [transforms.Resize([297, 297]), transforms.ToTensor()])    
         sample_low = transform(sample_low)    
         # Add batch dimension:
         sample_low = sample_low.unsqueeze(0)
