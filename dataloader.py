@@ -10,7 +10,7 @@ class MyDataLoader():
                          batch_size=16, train_size=0.9, val_size=0.05):
         print("get_data_loaders: path low: ", path_low, " - path high: ", path_high)
         transform = transforms.Compose(
-            [transforms.Resize([300, 300]), transforms.ToTensor()])
+            [transforms.Resize([297, 297]), transforms.ToTensor()])
         my_dataset = MyDataset(path_low, path_high, transform)
 
         # Getting size of sets

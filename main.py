@@ -10,17 +10,15 @@ parser.add_argument("-rlr", "--rel_lr", help="learning rate for relight", type=f
 parser.add_argument("-m", "--mode", help="join: train decom and relight together, split: train decom and relight separately", type=str, default="split")
 parser.add_argument("-i", "--ignore_ienhance", help="bool to ignore enhanced illuminance if mode is join", type=bool, default=False)
 parser.add_argument("-s", "--s_epochs", help="amount of epochs to store models", type=int, default=10)
+parser.add_argument("-t", "--transposed", help="use convolutional transpose", type=bool, default=False)
 args = parser.parse_args()
 
 if __name__ == "__main__":
     create_directories()
 
     if args.mode == 'split':
-        training_split(args.n_epochs, args.decom_lr, args.rel_lr, args.s_epochs)
+        training_split(args.n_epochs, args.decom_lr, args.rel_lr, args.s_epochs, args.transposed)
     elif args.mode == 'join':
         training_join(args.n_epochs, args.decom_lr, args.rel_lr, args.s_epochs, args.ignore_ienhance)
     else:
         print ("error")
-
-# python main.py --n_epochs 5 --mode "join" --ignore_ienhance True
-# python main.py -e 5 -m "join" -i True 

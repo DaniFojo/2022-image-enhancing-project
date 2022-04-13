@@ -2,6 +2,7 @@
 data/
 wandb/
 checkpoints/
+run.sh
 
 # Images flask
 application/static/uploads
