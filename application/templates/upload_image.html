@@ -32,13 +32,13 @@
     
     {% if filename %}
     <div>
-      <img src="{{ url_for('display_image', filename=filename) }}">
+      <img src="{{ url_for('display_image', filename=filename) }}" width="297">
     </div>
     {% endif %}
 
     {% if img_enhanced %}
     <div>
-      <img src="{{ url_for('display_image', filename=img_enhanced) }}">
+      <img src="{{ url_for('display_image', filename=img_enhanced) }}" width="297">
     </div>
     {% endif %}
 	
