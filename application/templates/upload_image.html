@@ -11,36 +11,48 @@
           alert('Please select a valid file.');
       }
   }
-  </script>
-  {% endblock %}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="jumbotron bg-white px-4 py-2">
-    <div class="row">
-        <div class="col text-left">
-          <h3>Please, upload the image file</h3>
+<div>
+    <div>
+        <div>
+			<h2>AIDL - Image Enhancing Project - Retinex</h3>
+			<h3>Please, upload a low light image:</h3>
         </div>
     </div>
 
     <form method="POST" enctype="multipart/form-data" class="text-center">
       {{ form.csrf_token }}
       <div>
-        {{ form.image(onchange='validateFileExtension(this, ["jpg","png"])') }}
+        {{ form.image(onchange='validateFileExtension(this, ["jpg","png","bmp"])') }}
         {{ form.submit }}
       </div>
     </form>
+	<br>
     
-    {% if filename %}
-    <div>
-      <img src="{{ url_for('display_image', filename=filename) }}" width="297">
-    </div>
-    {% endif %}
+	<div class="flex-container">
+		{% if filename %}
+		<div>
+			<p>Low Light Image</p>
+		<img src="{{ url_for('display_image', filename=filename) }}" width="297">
+		</div>
+		{% endif %}
 
-    {% if img_enhanced %}
-    <div>
-      <img src="{{ url_for('display_image', filename=img_enhanced) }}" width="297">
-    </div>
-    {% endif %}
-	
+		{% if img_enh %}
+		<div>
+			<p>Enhanced Image</p>
+			<img src="{{ url_for('display_image', filename=img_enh) }}" width="297">
+		</div>
+		{% endif %}
+
+		{% if img_enh_convtrans %}
+		<div>
+			<p>Enhanced Image (ConvTransp)</p>
+			<img src="{{ url_for('display_image', filename=img_enh_convtrans) }}" width="297">
+		</div>
+		{% endif %}
+	</div>
 </div>
 {% endblock %}

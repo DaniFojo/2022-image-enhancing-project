@@ -1,0 +1,19 @@
+body {
+	font-family: Verdana, sans-serif;
+	color: #666666; 
+	margin: 20px;
+}
+
+
+.flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    align-items: baseline;
+}
+
+.flex-container > div {
+	background-color: #f1f1f1;
+	margin: 10px;
+	padding: 20px;
+}

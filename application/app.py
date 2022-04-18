@@ -20,8 +20,10 @@ def create_app():
 
 app = create_app()
 
-model_decom_split = None
-model_relight_split = None
+model_split_decom = None
+model_split_relight = None
+model_split_convtrans_decom = None
+model_split_convtrans_relight = None
 
 
 def load_model_pair(decom_pt_file_name, relight_pt_file_name):
@@ -85,11 +87,14 @@ def enhance_image(path_img_low, model_decom, model_relight):
 @app.before_first_request
 def _load_models():
 
-    global model_decom_split, model_relight_split
+    global model_split_decom, model_split_relight
+    global model_split_convtrans_decom, model_split_convtrans_relight
 
-    model_decom_split, model_relight_split = load_model_pair(os.path.join('split', 'model_decom_split.pt'), 
-                                                             os.path.join('split', 'model_relight_split.pt'))
+    model_split_decom, model_split_relight = load_model_pair(os.path.join('split', '2022_04_14_17_50_55_model_split_decom.pt'), 
+                                                             os.path.join('split', '2022_04_14_17_50_55_model_split_relight.pt'))
 
+    model_split_convtrans_decom, model_split_convtrans_relight = load_model_pair(os.path.join('split', '2022_04_15_18_47_52_model_split_conv_trans_decom.pt'), 
+                                                             os.path.join('split', '2022_04_15_18_47_52_model_split_conv_trans_relight.pt'))
 
 
 @app.route('/')
@@ -113,11 +118,15 @@ def upload_image():
         path_img_low = os.path.join(path_uploads, image.filename)
         image.save(path_img_low)
 
-        reconstructed_img = enhance_image(path_img_low, model_decom_split, model_relight_split)
+        reconstructed_img = enhance_image(path_img_low, model_split_decom, model_split_relight)
         reconstructed_img.save(os.path.join(path_uploads, "reconst_split.png"))
 
+        reconstructed_img_02 = enhance_image(path_img_low, model_split_convtrans_decom, model_split_convtrans_relight)
+        reconstructed_img_02.save(os.path.join(path_uploads, "reconst_split_convtrans.png"))
+
         # Mostrar resultados:
-        return render_template('upload_image.html', form=form, filename=image.filename, img_enhanced="reconst_split.png")
+        return render_template('upload_image.html', form=form, filename=image.filename, 
+                                img_enh="reconst_split.png", img_enh_convtrans="reconst_split_convtrans.png")
 
     # Mostrar pantalla para subir imagen:
     return render_template('upload_image.html', form=form)
