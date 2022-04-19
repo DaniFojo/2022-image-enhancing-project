@@ -33,7 +33,7 @@ We chose Retinex model as an effective tool for low-light image enhancement. One
 
 [¿Qué es el color? La teoría Retinex de Land](http://opticaluzycolor.blogspot.com/2011/03/que-es-el-color-la-teoria-retinex-de.html?m=1)
 
-<img src="figs/reflectance-luminance.png"/>
+<img src="figs/reflectance-luminance.PNG"/>
 
 ## Datasets
 
@@ -42,12 +42,12 @@ We used both datasets already used in the original paper:
 Dataset 1: [LOL (LOw-Light dataset)](https://drive.google.com/file/d/157bjO1_cFuSd0HWDUuAmcHRJDVyWpOxB/view)  
 500 real images (485 to train and 15 to test), 400x600px.
 
-<img src="figs/lol-dataset.png"/>
+<img src="figs/lol-dataset.PNG"/>
 
 Dataset 2: [Synthetic pairs](https://drive.google.com/file/d/1G6fi9Kiu7CDnW2Sh7UQ5ikvScRv8Q14F/view)  
 1250 images (1000 to train and 250 to test), different sizes.
 
-<img src="figs/synthetic-dataset.png"/>
+<img src="figs/synthetic-dataset.PNG"/>
 
 And we have created our own set of 10 pair of images with normal and low light to test the final model, these are some examples:
 
@@ -79,7 +79,7 @@ We have used [Wandb](https://wandb.ai/site) in order to check the performance of
 
 We have trained in [Google Cloud](https://cloud.google.com/?hl=es) with the following properties:
 
-<img src="figs/google-vm-properties.png"/>
+<img src="figs/google-vm-properties.PNG"/>
 
 ## Results
 *!!!!!! Is it possible links to 4 wandb workspaces? Either way, some screenshots of training and eval curves and images of all the nets and final results in each experiment:*
