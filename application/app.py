@@ -97,12 +97,7 @@ def _load_models():
                                                              os.path.join('split', '2022_04_15_18_47_52_model_split_conv_trans_relight.pt'))
 
 
-@app.route('/')
-def home():
-    return render_template('base.html', message="Hello Retinex Team")
-
-
-@app.route('/upload_image/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def upload_image():
 
     """Permite subir una imagen y luego la muestra."""

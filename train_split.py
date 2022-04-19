@@ -141,14 +141,3 @@ def training_split(n_epochs, decom_lr, relight_lr, s_epochs, transposed):
         if epoch % s_epochs == 0:
             savedir = os.path.join(path_relight, f"model_relight_epoch_{epoch}.pt")
             save_model(model_relight, optimizer_relight, epoch, savedir)
-
-
-
-    # path_decomposition = os.path.join('checkpoints', 'split', 'decomposition', '2022_04_07_13_15_25','model_decomposition_epoch_1.pt')
-    # path_relight = os.path.join('checkpoints', 'split', 'relight', '2022_04_07_13_15_25', 'model_relight_epoch_1.pt')
-    # model_decomposition = load_model(path_decomposition, 'decom', device)
-    # model_relight = load_model(path_relight, 'relight', device)
-    # eval_decom(model_decomposition, test_data_loader)
-    # eval_relight(model_decomposition, model_relight, test_data_loader)
-
-

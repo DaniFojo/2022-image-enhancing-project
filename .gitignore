@@ -1,7 +1,7 @@
 .vscode/
 data/
 wandb/
-checkpoints/
+checkpoints_old/
 run.sh
 
 # Images flask

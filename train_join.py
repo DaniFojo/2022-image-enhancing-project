@@ -112,10 +112,3 @@ def training_join(n_epochs, decom_lr, relight_lr, s_epochs, ignore_ienhanace=Fal
             save_model(model_decomposition, optimizer, epoch, savedir_decomposition)
             save_model(model_relight, optimizer, epoch, savedir_relight)
         
-
-    # path_decomposition = os.path.join('checkpoints', 'join', 'decomposition', '***','model_decomposition_epoch_1.pt')
-    # path_relight = os.path.join('checkpoints', 'join', 'relight', '***', 'model_relight_epoch_1.pt')
-    # model_decomposition = load_model(path_decomposition, 'decom', device)
-    # model_relight = load_model(path_relight, 'relight', device)
-    # eval_decom(model_decomposition, test_data_loader)
-    # eval_relight(model_decomposition, model_relight, test_data_loader)

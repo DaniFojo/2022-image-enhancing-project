@@ -1,0 +1,6 @@
+venv/
+wandb/
+.vscode/
+__pycache__/
+checkpoints_old/
+.gitignore
