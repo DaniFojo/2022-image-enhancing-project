@@ -8,14 +8,12 @@ class MyDataLoader():
 
     def get_data_loaders(self, path_low='data/low', path_high='data/high',
                          batch_size=16, train_size=0.9, val_size=0.05):
-        print("get_data_loaders: path low: ", path_low, " - path high: ", path_high)
         transform = transforms.Compose(
             [transforms.Resize([297, 297]), transforms.ToTensor()])
         my_dataset = MyDataset(path_low, path_high, transform)
 
         # Getting size of sets
         dataset_len = len(my_dataset)
-        assert dataset_len > 0
         num_train = int(np.floor(dataset_len * train_size))
         num_val = int(np.floor(dataset_len * val_size))
         num_test = dataset_len - num_train - num_val
