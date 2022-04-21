@@ -13,6 +13,7 @@
 - About the model
 - Model Training
 - Results
+- Bottlenecks
 - Conclusions
 - Execution Instructions
 - App Usage
@@ -168,27 +169,52 @@ For these 2 exepriments we could see that the results looked really similar, but
 
 In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good enhancing results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
 
-## Bottleneck
+## Bottlenecks
 
-* encontrar pares de imagenes (por eso se usan las sinteticas)
-* tamaño de imagen para conv trans
-*!!!!!! do we want to explain that we had to change the image input size in order to maintain the parameters through layers?*
-* Wandb en algunos casos iba muy lento
-* Limitaciones de VM
+* **Finding good training sets**  
+We needed pairs of dark/normal light images and there weren't many of them already built. Good proof of this issue is that even in the original paper they had to use syntetically darkened images.
+
+* **Image size in order to use transposed convolutions**  
+In the beginning, the input image size for the model was 300x300, but we found that when we introduced the transposed convolutions in the Enhance-Net this value didn't work. The problem was that in the Enhance-Net we had skip connections and the output sizes of the encoder layers (convolutions) had to match with the output sizes of the decoder layers (transposed convolutions) and it didn't happen. We had two main options: changing the layers parameters or changing the initial input image size. We decided that it was better to maintain the parameters of all layers to be the same as in the original paper so, applying the formulas for obtaing the output size of convolutional and transposed convolutional layers and solving the equations system, we found that the closest value to 300x300 that worked for us was 297x297.
+
+* **Wandb was slow in some cases**
+
+* **Google Cloud VM resources limitations** 
 
 ## Conclusions
-*!!!!!! Which model is best for us? Why?*
-Si tuvieramos que escoger uno para arreglar la imagen y ya esta: todo junto con o sin ienhanced=1 (da igual porque acaba dando unos).
+Originally, we had two main goals in this project regarding the model:  
+* Obtaining good image decomposition representations applying Retinex theory in real images (I+R).
+* Obtaining good quality results in enhancing low-light images.
 
-Si tuvieramos que escoger que arregla imagenes i mantiene descomposicion teorica: por separado y conv trans
+If we want to maintain both goals, we would choose the model that trained both nets separately and replaced the interpolation upsizing with transposed convolutional layers because without the transposed convolutions we observed some noise in the enhanced images and training both nets together resulted in a image decomposition that wasn't luminance+reflectance. 
+
+But if our only goal was enhancing dark images, without thinking about the I+R decomposition theory, we would choose the model that trained both nets together, as the final enhanced images look better to our eyes. 
 
 ## Execution Instructions
-explicar los parametros del run.sh
+
+| Argument | Description | Default value | Comment |
+|----------|-------------|---------------|---------|
+|-e|--n_epochs|20|Amount of epochs to train with|
+|-dlr|--decom_lr|0.001|Learning rate for decomposition|
+|-rlr|--rel_lr|0.001|Learning rate for relight|
+|-m|--mode|split|join: train decom and relight together, split: train decom and relight separately|
+|-i|--ignore_ienhance|False|Bool to ignore enhanced luminance if mode is join|
+|-s|--s_epochs|10|Amount of epochs to store model|
+|-t|--transposed|False|Use convolutional transpose|
+
+Examples (for our 4 experiments):
+
+`python main.py -e 200 -m join`  
+`python main.py -e 200 -m join -i True`
+
+`python main.py -e 200`  
+`python main.py -e 200 -t True`
 
 ## App Usage
-*!!!!!! TO-DO*
-python app.py in folder folder application
-enter local host in explorer
+The application is made with [Flask](https://flask.palletsprojects.com/en/2.1.x/quickstart/).
 
-*Flask*
+To run it, just execute `python app.py` in terminal from the *application* folder, then enter local host in the web explorer:  
+
 <img src="figs/app-example.png"/>
+
+Upload any image and the app will show the 2 enhanced images from the chosen models in the conclusions.
