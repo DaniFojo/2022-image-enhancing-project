@@ -58,6 +58,29 @@ In the figure below we can find the proposed framework for Retinex-Net. The enha
 
 <img src="figs/retinexnet.png" width="600px"/>
 
+As illustrated in the figure above, Decom-Net takes the low-light image $S_{low}$ and the normal-light one $S_{normal}$ as input, then estimates the reflectance $R_{low}$ and the illumination $I_{low}$ for $S_{low}$,
+as well as $R_{normal}$ and $I_{normal}$ for $S_{normal}$, respectively. It first uses a 3×3 convolutional layer to extract features from the input image. Then, several 3×3 convolutional layers with ReLU as the activation function are followed to map the RGB image into reflectance and illumination. A 3×3 convolutional layer projects $R$ and $I$ from feature space, and sigmoid function is used to constrain both $R$ and $I$ in the range of $[0, 1]$.  
+
+The loss $L$ consists of three terms: reconstruction loss $L_{recon}$, invariable reflectance loss $L_{ir}$, and illumination smoothness loss $L_{is}$:  
+
+$$L = L_{recon} +\lambda_{ir}L_{ir} + \lambda_{is}L{is}$$
+
+where $\lambda_{ir}$ and $\lambda_{is}$ denote the coefficients to balance the consistency of reflectance and the smoothness of illumination. 
+
+Based on the assumption that both $R_{low}$ and $R_{high}$ can reconstruct the image with the corresponding illumination map, the reconstruction loss $L_{recon}$ is formulated as:
+
+$$ L_{recon} = \sum_{i=low,normal}\sum_{j=low,normal}\lambda_{ij}||R_i \circ I_j − S_j||_1$$ 
+
+Invariable reflectance loss $L_{ir}$ is introduced to constrain the consistency of reflectance:
+
+$$L_{ir} = ||R_{low} − R_{normal}||_1$$
+
+Illumination smoothness loss Lis is formulated as:
+
+$$L_{is} = \sum_{i=low,normal} ||\nabla I_i \circ exp(−\lambda_g ∇ R_i)||$$
+
+where $\nabla$ denotes the gradient, including $\nabla_h$ (horizontal) and $\nabla_v$ (vertical), and $\lambda_g$ denotes the coefficient balancing the strength of structure-awareness.
+
 ## Model training
 
 We have trained the net in mainly 4 different ways:
@@ -71,9 +94,9 @@ We decided to try training both nets at the same time, joining both optimizers a
     * *Training both nets*
     * *Ignoring Enhance-Net*
 
-In the end we haven't used any denoising operation. Both the one referenced in the paper (BM3D) and the alternative we found in the OpenCV library (fastNlMeansDenoising) were complex to apply and didn't add visible improvement in the resulting enhanced images. 
+In the end we haven't used any denoising operation. Both the one referenced in the paper (BM3D) and the alternative we found in the OpenCV library (fastNlMeansDenoising) were complex to apply and didn't add visible improvement in the resulting enhanced images. We haven't done any hyperparameter tunning neither, as we indeed had a loss definition for the model training but no other metric that allowed us to compare which final enhanced images were better, except for our subjective human eye.
 
-In all four experiments we have trained 200 epochs and started with learning rate at 0.0001 for both nets, using a scheduler. We tried both StepLR and ReduceOnPlateau, but StepLR delivered better results.
+In all four experiments we have trained 200 epochs and started with learning rate at 0.001 for both nets, using a scheduler. We tried both StepLR and ReduceOnPlateau, but StepLR delivered better results.
 
 We have used [Wandb](https://wandb.ai/site) in order to check the performance of all the models form the different experiments.
 
@@ -82,26 +105,90 @@ We have trained in [Google Cloud](https://cloud.google.com/?hl=es) with the foll
 <img src="figs/google-vm-properties.PNG"/>
 
 ## Results
-*!!!!!! Is it possible links to 4 wandb workspaces? Either way, some screenshots of training and eval curves and images of all the nets and final results in each experiment:*
+For each experiment there is a link to the Wandb report, so we can check the Decom-Net and Enhance-Net output images for every epoch of the training.
 
-* Decom-Net and Enhance-Net separately
-    * With convolutional + resize layers in Enhance-Net
-    * With convolutional transposed layers in Enhance-Net  
-    
+### Decom-Net and Enhance-Net separately
+* [With convolutional + resize layers in Enhance-Net](https://wandb.ai/aidl_retinex/retinex/reports/Experiment-3--VmlldzoxODYzNDIx?accessToken=60nx4c5yxf7zm8z5cerreejs0hs40oxte0d7kxa0h51x4x34ozmzxm3jdedzxygz)  
+
+<img src="figs/1_losses.png"/>
+
+| | Decom-Net | Enhance-Net |
+| ------------    | -----------  | ----------- |
+| Training Loss   | 0.008 | 0.120 |
+| Validation Loss | 0.008 | 0.134 |
+
+<img src="figs/1_training_decom.png"/>
+<img src="figs/1_val_decom.png"/>
+<img src="figs/1_training_relight.png"/>
+<img src="figs/1_val_relight.png"/>
+
+* [With convolutional transposed layers in Enhance-Net](https://wandb.ai/aidl_retinex/retinex/reports/Experiment-4--VmlldzoxODYzNDQ5?accessToken=6jhwumkcsi5o3ocjh82xc0rdg73v69l39aj8daizksn8zssk6sqlxgucw85rv0k1)  
+
+<img src="figs/2_losses.png"/>
+
+| | Decom-Net | Enhance-Net |
+| ------------    | -----------  | ----------- |
+| Training Loss   | 0.007 | 0.123 |
+| Validation Loss | 0.007 | 0.129 |
+
+<img src="figs/2_training_decom.png"/>
+<img src="figs/2_val_decom.png"/>
+<img src="figs/2_training_relight.png"/>
+<img src="figs/2_val_relight.png"/>
+
+For these 2 exepriments we could see that the results looked really similar, but then comparing some enhanced images from our test set, we couold observe that using interpolation instead of transposed convolutional layers had some issues with plain color zones, creating some noise:
+
+!!!!!!!! IMAGEN CON MANCHAS
+
+
+### Decom-Net and Enhance-Net together
+* [Training both nets](https://wandb.ai/aidl_retinex/retinex/reports/Experiment-1--VmlldzoxODYzMzU0?accessToken=uprm4x1mdqf8v52niitxwzlxxokmc2bfglkedinqjpk0887ms3gxqku7wdqp3d56)
+
+<img src="figs/3_losses.png"/>
+
+| | Decom-Net | Enhance-Net |
+| ------------    | -----------  | ----------- |
+| Training Loss   | 0.014 | 0.096 |
+| Validation Loss | 0.014 | 0.107 |
+
+<img src="figs/3_training_phase.png"/>
+<img src="figs/3_val_phase.png"/>
+
+* [Ignoring Enhance-Net](https://wandb.ai/aidl_retinex/retinex/reports/Experiment-2--VmlldzoxODYzNDAy?accessToken=fcacjitj4dpgzwmbd31tjfrjckvbpav97me54rk3xirvxznb3c0y3qk677zulto1)
+
+<img src="figs/4_losses.png"/>
+
+| | Decom-Net | Enhance-Net |
+| ------------    | -----------  | ----------- |
+| Training Loss   | 0.016 | 0.099 |
+| Validation Loss | 0.014 | 0.113 |
+
+<img src="figs/4_training_phase.png"/>
+<img src="figs/4_val_phase.png"/>  
+
+In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
+
+## Bottleneck
+
+* encontrar pares de imagenes (por eso se usan las sinteticas)
+* tamaño de imagen para conv trans
 *!!!!!! do we want to explain that we had to change the image input size in order to maintain the parameters through layers?*
-* Decom-Net and Enhance-Net together
-    * Training both nets
-    * Ignoring Enhance-Net  
-    *!!!!!! explain here that decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing).*
+* Wandb en algunos casos iba muy lento
+* Limitaciones de VM
 
 ## Conclusions
 *!!!!!! Which model is best for us? Why?*
+Si tuvieramos que escoger uno para arreglar la imagen y ya esta: todo junto con o sin ienhanced=1 (da igual porque acaba dando unos).
+
+Si tuvieramos que escoger que arregla imagenes i mantiene descomposicion teorica: por separado y conv trans
 
 ## Execution Instructions
-*!!!!!! We could prepare a script that installs requirements and executes four experiments. Explain here what are the options in that script*
+explicar los parametros del run.sh
 
 ## App Usage
 *!!!!!! TO-DO*
+python app.py in folder folder application
+enter local host in explorer
 
 *Flask*
 <img src="figs/app-example.png"/>
