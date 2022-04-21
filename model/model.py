@@ -5,34 +5,42 @@ import torchvision as tv
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-class DecomNet(nn.Module):
-    """
-    Convolutional NN
-    Takes in paired low/high-light images and learns the decomposition for both.
-    Constraint: images share the same reflectance.
-    """
 
+class DecomNet(nn.Module):
     def __init__(self, out_channels=64, kernel_size=3):
         super().__init__()
         # Convolutional with no activation function:
-        self.conv0 = nn.Conv2d(in_channels=3, out_channels=out_channels, kernel_size=kernel_size,
+        self.conv0 = nn.Conv2d(in_channels=3, out_channels=out_channels,
+                               kernel_size=kernel_size,
                                stride=1, padding='same')
 
         # 5 convolutional layers with a ReLU
-        self.conv1 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
-        self.conv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
-        self.conv3 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
-        self.conv4 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
-        self.conv5 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
+        self.conv1 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
+        self.conv2 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
+        self.conv3 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
+        self.conv4 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
+        self.conv5 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
 
         # Convolutional with no activation function:
-        self.conv6 = nn.Conv2d(in_channels=out_channels, out_channels=4,
-                               kernel_size=kernel_size, stride=1, padding='same')
+        self.conv6 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=4,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
 
     def forward(self, x):
         x = self.conv0(x)
@@ -59,42 +67,64 @@ class RelightNet(nn.Module):
         self.padding = int((kernel_size - 1) / 2)
 
         # Encoder
-        self.conv0 = nn.Conv2d(in_channels=4, out_channels=out_channels, kernel_size=kernel_size,
+        self.conv0 = nn.Conv2d(in_channels=4, out_channels=out_channels,
+                               kernel_size=kernel_size,
                                stride=1, padding='same')
-        self.conv1 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
-        self.conv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
-        self.conv3 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
+        self.conv1 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=2, padding=self.padding)
+        self.conv2 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=2, padding=self.padding)
+        self.conv3 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size,
+                               stride=2, padding=self.padding)
 
         # Decoder
-        self.deconv1 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                                 kernel_size=kernel_size, stride=1, padding='same')
-        self.deconv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                                 kernel_size=kernel_size, stride=1, padding='same')
-        self.deconv3 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                                 kernel_size=kernel_size, stride=1, padding='same')
+        self.deconv1 = nn.Conv2d(in_channels=out_channels,
+                                 out_channels=out_channels,
+                                 kernel_size=kernel_size,
+                                 stride=1, padding='same')
+        self.deconv2 = nn.Conv2d(in_channels=out_channels,
+                                 out_channels=out_channels,
+                                 kernel_size=kernel_size,
+                                 stride=1, padding='same')
+        self.deconv3 = nn.Conv2d(in_channels=out_channels,
+                                 out_channels=out_channels,
+                                 kernel_size=kernel_size,
+                                 stride=1, padding='same')
 
         # Last Convolutions
-        self.convO = nn.Conv2d(in_channels=3 * out_channels, out_channels=out_channels,
-                               kernel_size=1, stride=1, padding='same')
-        self.convF = nn.Conv2d(in_channels=out_channels, out_channels=1,
-                               kernel_size=kernel_size, stride=1, padding='same')
+        self.convO = nn.Conv2d(in_channels=3 * out_channels,
+                               out_channels=out_channels,
+                               kernel_size=1, stride=1,
+                               padding='same')
+        self.convF = nn.Conv2d(in_channels=out_channels,
+                               out_channels=1,
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
 
     def forward(self, x):
         x0 = self.conv0(x)
         x1 = F.relu(self.conv1(x0))
         x2 = F.relu(self.conv2(x1))
         x3 = F.relu(self.conv3(x2))
-        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]), mode='bicubic')
+        x4 = F.interpolate(input=x3, size=(x2.shape[2], x2.shape[3]),
+                           mode='bicubic')
         x4 = F.relu(self.deconv1(x4)) + x2
-        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]), mode='bicubic')
+        x5 = F.interpolate(input=x4, size=(x1.shape[2], x1.shape[3]),
+                           mode='bicubic')
         x5 = F.relu(self.deconv2(x5)) + x1
-        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]), mode='bicubic')
+        x6 = F.interpolate(input=x5, size=(x0.shape[2], x0.shape[3]),
+                           mode='bicubic')
         x6 = F.relu(self.deconv3(x6)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]),
+                           mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]),
+                           mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)
@@ -111,23 +141,38 @@ class RelightNetConvTrans(nn.Module):
 
         # Encoder
         self.conv0 = nn.Conv2d(in_channels=4, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=1, padding='same')
-        self.conv1 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
-        self.conv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
-        self.conv3 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels,
-                               kernel_size=kernel_size, stride=2, padding=self.padding)
-        self.deconv1 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels,
-                                          kernel_size=kernel_size, stride=2, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels,
-                                          kernel_size=kernel_size, stride=2, padding=1)
-        self.deconv3 = nn.ConvTranspose2d(in_channels=out_channels, out_channels=out_channels,
-                                          kernel_size=kernel_size, stride=2, padding=1)
-        self.convO = nn.Conv2d(in_channels=3 * out_channels, out_channels=out_channels,
+                               kernel_size=kernel_size, stride=1,
+                               padding='same')
+        self.conv1 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size, stride=2,
+                               padding=self.padding)
+        self.conv2 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size, stride=2,
+                               padding=self.padding)
+        self.conv3 = nn.Conv2d(in_channels=out_channels,
+                               out_channels=out_channels,
+                               kernel_size=kernel_size, stride=2,
+                               padding=self.padding)
+        self.deconv1 = nn.ConvTranspose2d(in_channels=out_channels,
+                                          out_channels=out_channels,
+                                          kernel_size=kernel_size,
+                                          stride=2, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(in_channels=out_channels,
+                                          out_channels=out_channels,
+                                          kernel_size=kernel_size,
+                                          stride=2, padding=1)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=out_channels,
+                                          out_channels=out_channels,
+                                          kernel_size=kernel_size,
+                                          stride=2, padding=1)
+        self.convO = nn.Conv2d(in_channels=3 * out_channels,
+                               out_channels=out_channels,
                                kernel_size=1, stride=1, padding='same')
         self.convF = nn.Conv2d(in_channels=out_channels, out_channels=1,
-                               kernel_size=kernel_size, stride=1, padding='same')
+                               kernel_size=kernel_size,
+                               stride=1, padding='same')
 
     def forward(self, x):
         x0 = self.conv0(x)
@@ -137,8 +182,10 @@ class RelightNetConvTrans(nn.Module):
         x4 = F.relu(self.deconv1(x3)) + x2
         x5 = F.relu(self.deconv2(x4)) + x1
         x6 = F.relu(self.deconv3(x5)) + x0
-        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
-        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]), mode='bicubic')
+        x7 = F.interpolate(input=x4, size=(x6.shape[2], x6.shape[3]),
+                           mode='bicubic')
+        x8 = F.interpolate(input=x5, size=(x6.shape[2], x6.shape[3]),
+                           mode='bicubic')
         x = torch.cat((x6, x7, x8), dim=1)
         x = self.convO(x)
         x = self.convF(x)
@@ -155,13 +202,16 @@ def smooth(r, i):
 
 def gradient(input_tensor, direction):
     smooth_kernel_x = torch.reshape(torch.tensor([[0, 0], [-1, 1]],
-                                    dtype=torch.float32), (1, 1, 2, 2)).to(device)
-    smooth_kernel_y = torch.transpose(smooth_kernel_x, dim0=2, dim1=3).to(device)
+                                    dtype=torch.float32),
+                                    (1, 1, 2, 2)).to(device)
+    smooth_kernel_y = torch.transpose(smooth_kernel_x,
+                                      dim0=2, dim1=3).to(device)
     if direction == "x":
         kernel = smooth_kernel_x
     elif direction == "y":
         kernel = smooth_kernel_y
-    grad = torch.abs(F.conv2d(input=input_tensor, weight=kernel, stride=1, padding='same'))
+    grad = torch.abs(F.conv2d(input=input_tensor, weight=kernel, stride=1,
+                              padding='same'))
     return grad
 
 
@@ -181,9 +231,12 @@ def loss_decom_net(input_low, input_high, r_low, i_low, r_high, i_high):
     loss_invariable_reflectance = torch.mean(torch.abs(r_low - r_high))
     loss_illumination_smoothness_low = smooth(r_low, i_low)
     loss_illumination_smoothness_high = smooth(r_high, i_high)
-    loss_decom = loss_recon_low + loss_recon_high + 0.001 * loss_recon_mutal_low + 0.001 * \
-        loss_recon_mutal_high + 0.01 * loss_invariable_reflectance + 0.1 * \
-        loss_illumination_smoothness_low + 0.1 * loss_illumination_smoothness_high
+    loss_decom = loss_recon_low + loss_recon_high + 0.001 * \
+        loss_recon_mutal_low + 0.001 * \
+        loss_recon_mutal_high + 0.01 * \
+        loss_invariable_reflectance + 0.1 * \
+        loss_illumination_smoothness_low + 0.1 * \
+        loss_illumination_smoothness_high
     return loss_decom
 
 

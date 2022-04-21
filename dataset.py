@@ -18,8 +18,10 @@ class MyDataset(Dataset):
         return len(self.name_index_list)
 
     def __getitem__(self, idx):
-        path_low = os.path.join(self.images_path_low, self.name_index_list[idx])
-        path_high = os.path.join(self.images_path_high, self.name_index_list[idx])
+        path_low = os.path.join(self.images_path_low,
+                                self.name_index_list[idx])
+        path_high = os.path.join(self.images_path_high,
+                                 self.name_index_list[idx])
         sample_low = Image.open(path_low)
         sample_high = Image.open(path_high)
         if self.transform:
