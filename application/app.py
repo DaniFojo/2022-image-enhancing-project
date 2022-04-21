@@ -8,7 +8,7 @@ from PIL import Image
 from torchvision.transforms.functional import to_pil_image
 import torch
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '..')) # Necesario para importar módulos desde el parent folder.
 from utils import create_directory_if_not_exists, load_model
 
 
