@@ -13,5 +13,8 @@ RUN pip install -r requirements.txt
 # Copy code to the working directory
 COPY . .
 
+# Expose port
+EXPOSE 80
+
 # command to run on container start
-ENTRYPOINT ["python", "app.py"]
+ENTRYPOINT ["python", "/app/application/app.py"]
