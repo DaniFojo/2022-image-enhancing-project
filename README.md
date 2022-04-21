@@ -58,28 +58,28 @@ In the figure below we can find the proposed framework for Retinex-Net. The enha
 
 <img src="figs/retinexnet.png" width="600px"/>
 
-As illustrated in the figure above, Decom-Net takes the low-light image $S_{low}$ and the normal-light one $S_{normal}$ as input, then estimates the reflectance $R_{low}$ and the illumination $I_{low}$ for $S_{low}$,
-as well as $R_{normal}$ and $I_{normal}$ for $S_{normal}$, respectively. It first uses a 3×3 convolutional layer to extract features from the input image. Then, several 3×3 convolutional layers with ReLU as the activation function are followed to map the RGB image into reflectance and illumination. A 3×3 convolutional layer projects $R$ and $I$ from feature space, and sigmoid function is used to constrain both $R$ and $I$ in the range of $[0, 1]$.  
+As illustrated in the figure above, Decom-Net takes the low-light image *S_low* and the normal-light one *S_normal* as input, then estimates the reflectance *R_low* and the illumination *I_low* for *S_low*,
+as well as *R_normal* and *I_normal* for *S_normal*, respectively. It first uses a 3×3 convolutional layer to extract features from the input image. Then, several 3×3 convolutional layers with ReLU as the activation function are followed to map the RGB image into reflectance and illumination. A 3×3 convolutional layer projects *R* and *I* from feature space, and sigmoid function is used to constrain both *R* and *I* in the range of *[0, 1]*.  
 
-The loss $L$ consists of three terms: reconstruction loss $L_{recon}$, invariable reflectance loss $L_{ir}$, and illumination smoothness loss $L_{is}$:  
+The loss *L* consists of three terms: reconstruction loss *L_recon*, invariable reflectance loss *L_ir*, and illumination smoothness loss *L_is*:  
 
-$$L = L_{recon} +\lambda_{ir}L_{ir} + \lambda_{is}L{is}$$
+<img src="figs/loss.png"/>
 
-where $\lambda_{ir}$ and $\lambda_{is}$ denote the coefficients to balance the consistency of reflectance and the smoothness of illumination. 
+where *λ_ir* and *λ_is* denote the coefficients to balance the consistency of reflectance and the smoothness of illumination. 
 
-Based on the assumption that both $R_{low}$ and $R_{high}$ can reconstruct the image with the corresponding illumination map, the reconstruction loss $L_{recon}$ is formulated as:
+Based on the assumption that both *R_low* and *R_high* can reconstruct the image with the corresponding illumination map, the reconstruction loss *L_recon* is formulated as:  
 
-$$ L_{recon} = \sum_{i=low,normal}\sum_{j=low,normal}\lambda_{ij}||R_i \circ I_j − S_j||_1$$ 
+<img src="figs/loss_recon.png"/>
 
-Invariable reflectance loss $L_{ir}$ is introduced to constrain the consistency of reflectance:
+Invariable reflectance loss *L_ir* is introduced to constrain the consistency of reflectance:
 
-$$L_{ir} = ||R_{low} − R_{normal}||_1$$
+<img src="figs/loss_ir.png"/>
 
 Illumination smoothness loss Lis is formulated as:
 
-$$L_{is} = \sum_{i=low,normal} ||\nabla I_i \circ exp(−\lambda_g ∇ R_i)||$$
+<img src="figs/loss_is.png"/>
 
-where $\nabla$ denotes the gradient, including $\nabla_h$ (horizontal) and $\nabla_v$ (vertical), and $\lambda_g$ denotes the coefficient balancing the strength of structure-awareness.
+where ∇ denotes the gradient, including *∇_h* (horizontal) and *∇_v* (vertical), and *λ_g* denotes the coefficient balancing the strength of structure-awareness.
 
 ## Model training
 
@@ -136,9 +136,9 @@ For each experiment there is a link to the Wandb report, so we can check the Dec
 <img src="figs/2_training_relight.png"/>
 <img src="figs/2_val_relight.png"/>
 
-For these 2 exepriments we could see that the results looked really similar, but then comparing some enhanced images from our test set, we couold observe that using interpolation instead of transposed convolutional layers had some issues with plain color zones, creating some noise:
+For these 2 exepriments we could see that the results looked really similar, but then comparing some enhanced images from the test set, we could observe that using interpolation instead of transposed convolutional layers had some issues with plain color zones, creating some noise:
 
-!!!!!!!! IMAGEN CON MANCHAS
+<img src="figs/interpolation_problem.png"/>
 
 
 ### Decom-Net and Enhance-Net together
@@ -166,7 +166,7 @@ For these 2 exepriments we could see that the results looked really similar, but
 <img src="figs/4_training_phase.png"/>
 <img src="figs/4_val_phase.png"/>  
 
-In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
+In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good enhancing results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
 
 ## Bottleneck
 
