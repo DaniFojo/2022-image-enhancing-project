@@ -35,28 +35,28 @@
 	<div class="flex-container">
 		{% if filename %}
 		<div>
-			<p>Low Light Image</p>
+			<p>Low Light Image <br>(Original)</p>
 		<img src="{{ url_for('display_image', filename=filename) }}" width="297">
 		</div>
 		{% endif %}
 
 		{% if img_enh %}
-		<div>
-			<p>Enhanced Image</p>
+		<!-- <div>
+			<p>Enhanced Image <br>(Split Training)</p>
 			<img src="{{ url_for('display_image', filename=img_enh) }}" width="297">
-		</div>
+		</div> -->
 		{% endif %}
 
 		{% if img_enh_convtrans %}
 		<div>
-			<p>Enhanced Image (ConvTransp)</p>
+			<p>Enhanced Image <br>(Split Training using ConvTransp)</p>
 			<img src="{{ url_for('display_image', filename=img_enh_convtrans) }}" width="297">
 		</div>
 		{% endif %}
 
 		{% if img_enh_join_enh1 %}
 		<div>
-			<p>Enhanced Image (join - ignore relight)</p>
+			<p>Enhanced Image <br>(End to End Training - Ignore relight)</p>
 			<img src="{{ url_for('display_image', filename=img_enh_join_enh1) }}" width="297">
 		</div>
 		{% endif %}

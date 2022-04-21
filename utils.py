@@ -34,7 +34,7 @@ def save_model(model, optimizer, epoch, savedir):
 
 
 def load_model(checkpoint_path, model_name, device):
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     if model_name == 'decom':
         model = DecomNet().to(device)
     else:
