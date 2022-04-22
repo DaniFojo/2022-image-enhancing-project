@@ -192,13 +192,15 @@ But if our only goal was enhancing dark images, without thinking about the I+R d
 
 ## Execution Instructions
 
+### For training the models
+
 | Argument | Description | Default value | Comment |
 |----------|-------------|---------------|---------|
-|-e|--n_epochs|20|Amount of epochs to train with|
+|-e|--n_epochs|20|Number of epochs to train with|
 |-dlr|--decom_lr|0.001|Learning rate for decomposition|
 |-rlr|--rel_lr|0.001|Learning rate for relight|
 |-m|--mode|split|join: train decom and relight together, split: train decom and relight separately|
-|-i|--ignore_ienhance|False|Bool to ignore enhanced luminance if mode is join|
+|-i|--ignore_ienhance|False|Boolean to ignore enhanced luminance if mode is join|
 |-s|--s_epochs|10|Amount of epochs to store model|
 |-t|--transposed|False|Use convolutional transpose|
 
@@ -211,10 +213,15 @@ Examples (for our 4 experiments):
 `python main.py -e 200 -t True`
 
 ## App Usage
+
+A web interface to enhance low light images is available.
+
 The application is made with [Flask](https://flask.palletsprojects.com/en/2.1.x/quickstart/).
 
-To run it, just execute `python app.py` in terminal from the *application* folder, then enter local host in the web explorer:  
+The whole project has been packed into a **Docker** container which exposes the web interface.
+
+Alternatively, to run it from source code, just execute `python app.py` in a terminal from the *application* folder, then enter local host in the web explorer:  
 
 <img src="figs/app-example.png"/>
 
-Upload any image and the app will show the 2 enhanced images from the chosen models in the conclusions.
+Upload any low light image and the app will show the 2 enhanced images from the chosen models in the conclusions.
