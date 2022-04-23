@@ -13,7 +13,7 @@
 - About the model
 - Model Training
 - Results
-- Bottlenecks
+- Issues
 - Conclusions
 - Execution Instructions
 - App Usage
@@ -50,9 +50,11 @@ Dataset 2: [Synthetic pairs](https://drive.google.com/file/d/1G6fi9Kiu7CDnW2Sh7U
 
 <img src="figs/synthetic-dataset.PNG"/>
 
-And we have created our own set of 10 pair of images with normal and low light to test the final model, these are some examples:
+And we have created our own set of 5 normal light images with their corresponding 2 darkened versions in two different ways: one synthetically darkened with an editing software and one directly taken with the same camera but with low exposition:
 
-<img src="figs/readme_example.png" width="200px"/>
+<img src="figs/1.png" />
+<img src="figs/1_synthetic.png" />
+<img src="figs/1_exposition.png" /> 
 
 ## About the model
 In the figure below we can find the proposed framework for Retinex-Net. The enhancement process is divided into three steps: decomposition, adjustment and reconstruction. In the decomposition step, a subnetwork Decom-Net decomposes the input image into reflectance and illumination. In the following adjustment step, an encoder-decoder based Enhance-Net brightens up the illumination. Multi-scale concatenation is introduced to adjust the illumination from multi-scale perspectives. Noise on the reflectance is also removed at this step. Finally, we reconstruct the adjusted illumination and reflectance to get the enhanced result.
@@ -169,7 +171,19 @@ For these 2 exepriments we could see that the results looked really similar, but
 
 In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good enhancing results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
 
-## Bottlenecks
+We have also applied the resulting models to our own test set, built with low light images caused by both low exposition and synthetically. We have observed that it works better when the images are darkened synthetically, as it shows in the following example:
+
+Original image:  
+<img src="figs/original_test.png"/> 
+
+Originally dark image (low exposition from camera):  
+<img src="figs/exposition_test.png"/>
+
+Synthetically darkened image:  
+<img src="figs/synthetic_test.png"/> 
+
+
+## Issues
 
 * **Finding good training sets**  
 We needed pairs of dark/normal light images and there weren't many of them already built. Good proof of this issue is that even in the original paper they had to use syntetically darkened images.
