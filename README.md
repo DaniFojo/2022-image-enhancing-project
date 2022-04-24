@@ -50,7 +50,7 @@ Dataset 2: [Synthetic pairs](https://drive.google.com/file/d/1G6fi9Kiu7CDnW2Sh7U
 
 <img src="figs/synthetic-dataset.PNG"/>
 
-And we have created our own set of 5 normal light images with their corresponding 2 darkened versions in two different ways: one synthetically darkened with an editing software and one directly taken with the same camera but with low exposition:
+And we have created our own set of 5 normal light images with their corresponding 2 darkened versions in two different ways: one synthetically darkened with an editing software and one directly taken with the same camera but with low exposure:
 
 <img src="figs/1.png" />
 <img src="figs/1_synthetic.png" />
@@ -171,12 +171,12 @@ For these 2 exepriments we could see that the results looked really similar, but
 
 In the case of training both Decom-NEt and Enhance-Net together, we could actually observe that output images for the Enhance-Net were all white in both experiments. The Decom-Net then gets good enhancing results for itself, but the decomposition is not actually luminance and reflectance, but something else that works anyway as image enhancing.
 
-We have also applied the resulting models to our own test set, built with low light images caused by both low exposition and synthetically. We have observed that it works better when the images are darkened synthetically, as it shows in the following example:
+We have also applied the resulting models to our own test set, built with low light images caused by both low exposure and synthetically. We have observed that it works better when the images are darkened synthetically, as it shows in the following example:
 
 Original image:  
 <img src="figs/original_test.png"/> 
 
-Originally dark image (low exposition from camera):  
+Originally dark image (low exposure from camera):  
 <img src="figs/exposition_test.png"/>
 
 Synthetically darkened image:  
