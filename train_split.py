@@ -114,10 +114,8 @@ def eval_relight(model_decom, model_rel, val_loader, epoch):
 
 def training_split(n_epochs, decom_lr, relight_lr, s_epochs, transposed):
     train_data_loader, val_data_loader, _ \
-        = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/\
-                                                    data/train/low',
-                                          path_high='/opt/proj_img_enhance/\
-                                                     data/train/high')
+        = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/data/train/low',
+                                          path_high='/opt/proj_img_enhance/data/train/high')
 
     model_decomposition = DecomNet().to(device)
     if transposed:

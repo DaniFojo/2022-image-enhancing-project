@@ -104,10 +104,8 @@ def evaluation(model_decom, model_relight, val_loader, epoch,
 def training_join(n_epochs, decom_lr, relight_lr, s_epochs,
                   ignore_ienhanace=False):
     train_data_loader, val_data_loader, _ \
-        = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/\
-                                                    data/train/low',
-                                          path_high='/opt/proj_img_enhance/data/\
-                                                     train/high')
+        = MyDataLoader().get_data_loaders(path_low='/opt/proj_img_enhance/data/train/low',
+                                          path_high='/opt/proj_img_enhance/data/train/high')
 
     model_decomposition = DecomNet().to(device)
     model_relight = RelightNet().to(device)
@@ -142,11 +140,9 @@ def training_join(n_epochs, decom_lr, relight_lr, s_epochs,
 
         if epoch % s_epochs == 0:
             savedir_decomposition = os.path.join(path_decomposition,
-                                                 f"model_decomposition_epoch_\
-                                                     {epoch}.pt")
+                                                 f"model_decomposition_epoch_{epoch}.pt")
             savedir_relight = os.path.join(path_relight,
-                                           f"model_relight_epoch_\
-                                               {epoch}.pt")
+                                           f"model_relight_epoch_{epoch}.pt")
             save_model(model_decomposition, optimizer, epoch,
                        savedir_decomposition)
             save_model(model_relight, optimizer, epoch, savedir_relight)

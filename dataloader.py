@@ -18,8 +18,7 @@ class MyDataLoader():
         num_val = int(np.floor(dataset_len * val_size))
         num_test = dataset_len - num_train - num_val
         print(
-            f'Num of train images: {num_train}, num of val images: {num_val}, \
-              num of test images: {num_test}')
+            f'Num of train images: {num_train}, num of val images: {num_val}, num of test images: {num_test}')
 
         # Getting sets
         train_set, val_set, test_set = random_split(
