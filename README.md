@@ -232,7 +232,10 @@ A web interface to enhance low light images is available.
 
 The application is made with [Flask](https://flask.palletsprojects.com/en/2.1.x/quickstart/).
 
-The whole project has been packed into a **Docker** container which exposes the web interface.
+The whole project has been packed into a **Docker** container which exposes the web interface:
+
+`docker build -f Dockerfile -t enhance .`  
+`docker run -p 80:80 enhance:latest` 
 
 Alternatively, to run it from source code, just execute `python app.py` in a terminal from the *application* folder, then enter local host in the web explorer:  
 
